@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<!-- saved from url=(1575)https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/1120342526/e1f918b3-c7a9-498f-910c-0d3ac66b8e38/homelab-dashboard.html?AWSAccessKeyId=ASIA2F3EMEYEZ73XZHNH&Signature=4cyW36%2BqeO9K9K5Oi4BF%2BzdKRsw%3D&x-amz-security-token=IQoJb3JpZ2luX2VjELX%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIGviOyVJwYCPma2v4BrnB%2B8sJowukPz6kL1VOQHT05slAiEA%2FVJ0Gz28wZac5%2BKM6t5tWtv3U82lKKpGywW2JnwpWIUq8wQIfhABGgw2OTk3NTMzMDk3MDUiDAspPldLmgcZpiT9airQBETIAkKVvzbVFPTVmAm1Drs5VKZDJH9lEF8FvbzFnhiF9ynJx6ZjQlO%2FH3fgabgxdAKU4rrfRvh4SpXHA6gUxwFRak8ObJZxUeSRK4%2BKsLT%2F0m8lGIbnHxL%2BFfg%2FbraCBaji4Z8%2BiyhE%2FccJ41%2FMPyMXpVEFHytjM8kiBQIGD3tRgwAOk0NPjRwyBqEChn2cTThG95c86v4o00eR%2BtEP0Vx8A%2FrSNUq2d3W2yOlTs%2BWbiLxFxi0ElMbSfiasamgWxIMHovfuwJYP3Y%2BNJADpA1qc6h%2Fpq9he5Sb2JtqRmOO2J0vx7bkGvZknUNoxczN4XQWiMX6mC7%2FEFvAzWxEW99%2Be3Noxiq1ND4xbtVJwEp4BlsEE2JBof8hGMhHeZIjD8uYyQhEKEDHR5%2BgKiicUDtX3XD3kLBr7KsE8hVDNspAbt%2BxMDoZHbAh2V7M0IHK%2BwV2O6lsFZmDljW5j0T%2Fw%2BKqFroIEAyakIhhxokVXQ022JrSBso27%2BPMyGaLnu0ykSxPnM%2Bm43JImePgwe6DMFuv4FZ82IqWTlybUOMVxVDPODdUW3tV5azNDrfqMJ%2Bf%2Fb8HABL%2FXXYGq5e1rIhvkZp5NcUbUsBwTS9L%2BsafY3ZHbLvR0c5kTbE3okg1YbyH%2FINpjo8BUZ81ub8wWsqL8WrMC6ZS2bGZBCR2rkWn8KlTTQRonPn92%2BUyXC%2B%2F3qou7vCLAxWB845KyloH15cTWetvdDDR3H3T%2FcDKMCIfHtdxI9bYleLMSqiHvuth%2FplfGw%2FZWYxTWPC4TqAR9Kl%2B7zO4wgPDG0QY6mAFlfl%2BXOjytfcDKAwYFY94bAew17uD5lk9aje%2F7u4UKfZnUNqTxwk6byBXPOUgBQExGjW6LMZFeBCB7rcKohtAXTrWUOWbeGljx6Dng%2BH3bld%2BMR045LPYa2nhNkTr%2FY8FscOGKyCpb3uuqZU6Y2aU1FDlob6ME4bHzeV7WmMns37AK6U3H52DKGyFYjvs5dafKcdF0%2FnNBSg%3D%3D&Expires=1781645411 -->
+<html lang="en" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homelab Dashboard</title>
+  <meta name="description" content="Azure-hosted smart dashboard for your Unraid services, backups, and family portal.">
+  <link rel="preconnect" href="https://api.fontshare.com/">
+  <link href="./Homelab Dashboard_files/css" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
+      --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
+      --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9; --color-surface-offset: #f3f0ec; --color-border: #d4d1ca;
+      --color-text: #28251d; --color-text-muted: #7a7974; --color-text-inverse: #f9f8f4;
+      --color-primary: #01696f; --color-primary-hover: #0c4e54; --color-success: #437a22; --color-blue: #006494; --color-warning: #964219;
+      --radius-sm: .375rem; --radius-md: .75rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(20,20,20,.06); --shadow-md: 0 8px 24px rgba(20,20,20,.08); --shadow-lg: 0 20px 60px rgba(20,20,20,.12);
+      --font-body: 'Satoshi', system-ui, sans-serif; --font-display: 'Cabinet Grotesk', system-ui, sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d; --color-surface-offset: #23211f; --color-border: #393836;
+      --color-text: #cdccca; --color-text-muted: #908f8b; --color-text-inverse: #171614;
+      --color-primary: #4f98a3; --color-primary-hover: #227f8b; --color-success: #6daa45; --color-blue: #5591c7; --color-warning: #fdab43;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.2); --shadow-md: 0 8px 24px rgba(0,0,0,.35); --shadow-lg: 0 20px 60px rgba(0,0,0,.45);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; font-family: var(--font-body); font-size: var(--text-base); background: radial-gradient(circle at top right, rgba(79,152,163,.12), transparent 28%), var(--color-bg); color: var(--color-text); line-height: 1.55; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; }
+    .shell { width: min(1240px, calc(100% - 2rem)); margin: 0 auto; padding: var(--space-6) 0 var(--space-12); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-8); }
+    .brand { display: flex; align-items: center; gap: var(--space-3); }
+    .logo { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(135deg, var(--color-primary), var(--color-blue)); color: white; box-shadow: var(--shadow-md); }
+    .brand h1 { font-family: var(--font-display); font-size: var(--text-lg); letter-spacing: -.03em; }
+    .brand p { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .top-actions { display: flex; align-items: center; gap: var(--space-3); }
+    .theme-toggle, .ghost { border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); background: var(--color-surface); color: var(--color-text); border-radius: var(--radius-full); padding: .8rem 1rem; }
+    .hero { display: grid; grid-template-columns: 1.4fr .9fr; gap: var(--space-6); margin-bottom: var(--space-6); }
+    .panel { background: color-mix(in srgb, var(--color-surface) 92%, transparent); border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); }
+    .hero-card { padding: var(--space-8); position: relative; overflow: hidden; }
+    .hero-card::after { content: ''; position: absolute; inset: auto -10% -20% auto; width: 220px; height: 220px; background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 30%, transparent), transparent 70%); filter: blur(10px); }
+    .eyebrow { display: inline-flex; align-items: center; gap: .5rem; font-size: var(--text-sm); color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 10%, transparent); padding: .45rem .8rem; border-radius: var(--radius-full); margin-bottom: var(--space-4); }
+    .hero h2 { font-family: var(--font-display); font-size: var(--text-2xl); line-height: 1.02; letter-spacing: -.05em; max-width: 12ch; margin-bottom: var(--space-4); }
+    .hero p { color: var(--color-text-muted); max-width: 56ch; margin-bottom: var(--space-6); }
+    .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+    .btn-primary, .btn-secondary { border-radius: var(--radius-full); padding: .95rem 1.2rem; border: 0; }
+    .btn-primary { background: var(--color-primary); color: var(--color-text-inverse); }
+    .btn-secondary { background: var(--color-surface-offset); color: var(--color-text); border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent); }
+    .summary { padding: var(--space-6); display: grid; gap: var(--space-4); }
+    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+    .stat { background: var(--color-surface-offset); border-radius: var(--radius-lg); padding: var(--space-4); border: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent); }
+    .stat .label { color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: .3rem; }
+    .stat .value { font-size: var(--text-xl); font-family: var(--font-display); letter-spacing: -.04em; }
+    .section { margin-top: var(--space-6); }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
+    .section-head h3 { font-family: var(--font-display); font-size: var(--text-xl); letter-spacing: -.04em; }
+    .section-head p { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .grid { display: grid; gap: var(--space-4); }
+    .services { grid-template-columns: repeat(4, 1fr); }
+    .service-card, .backup-card, .timeline-card { padding: var(--space-5); }
+    .service-card { min-height: 200px; display: flex; flex-direction: column; justify-content: space-between; }
+    .service-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-5); }
+    .service-icon { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--color-surface-offset); color: var(--color-primary); }
+    .service-name { font-weight: 700; font-size: 1.05rem; margin-bottom: .2rem; }
+    .service-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .pill { display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .75rem; border-radius: var(--radius-full); font-size: var(--text-sm); background: color-mix(in srgb, var(--color-success) 14%, transparent); color: var(--color-success); }
+    .pill.warn { background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning); }
+    .pill.blue { background: color-mix(in srgb, var(--color-blue) 12%, transparent); color: var(--color-blue); }
+    .two-col { grid-template-columns: 1.1fr .9fr; }
+    .backup-list, .timeline-list { display: grid; gap: var(--space-3); }
+    .backup-item, .timeline-item { background: var(--color-surface-offset); border: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent); border-radius: var(--radius-lg); padding: var(--space-4); }
+    .backup-item-top, .timeline-item-top { display: flex; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .backup-name { font-weight: 700; }
+    .muted { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .progress { height: 10px; border-radius: var(--radius-full); background: color-mix(in srgb, var(--color-text) 10%, transparent); overflow: hidden; margin-top: var(--space-3); }
+    .bar { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--color-primary), var(--color-blue)); }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-top: var(--space-3); }
+    .metric { padding: .9rem; border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-surface) 55%, var(--color-surface-offset)); }
+    .metric .muted { margin-bottom: .2rem; }
+    .timeline-item p { max-width: 52ch; }
+    .footer-note { margin-top: var(--space-6); color: var(--color-text-muted); font-size: var(--text-sm); text-align: center; }
+    @media (max-width: 1100px) {
+      .hero, .two-col, .services { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 1rem, 100%); }
+      .topbar, .section-head, .hero, .services, .two-col, .summary-grid, .metrics { grid-template-columns: 1fr; display: grid; }
+      .topbar { display: grid; }
+      .top-actions { justify-content: flex-start; }
+      .hero-card, .summary, .service-card, .backup-card, .timeline-card { padding: var(--space-5); }
+      .hero h2 { max-width: 13ch; }
+      .cta-row { flex-direction: column; }
+      .btn-primary, .btn-secondary { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-label="Homelab logo">
+            <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"></path>
+            <path d="M12 3v18"></path>
+            <path d="M4 7.5 12 12l8-4.5"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Connor Cloud</h1>
+          <p>Azure front door for Unraid, backups, media, and family access</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="ghost">Demo Mode</button>
+        <button class="theme-toggle" data-theme-toggle="" aria-label="Toggle theme">☾</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <article class="panel hero-card">
+        <div class="eyebrow">Smart dashboard · Azure Static Web Apps ready</div>
+        <h2>Your private cloud, finally presented like a product.</h2>
+        <p>This portal is designed as the clean public and private front-end for your homelab: backup health, service status, quick access, and a future public request flow for Overseerr without exposing Unraid itself.</p>
+        <div class="cta-row">
+          <a class="btn-primary" href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/1120342526/e1f918b3-c7a9-498f-910c-0d3ac66b8e38/homelab-dashboard.html?AWSAccessKeyId=ASIA2F3EMEYEZ73XZHNH&amp;Signature=4cyW36%2BqeO9K9K5Oi4BF%2BzdKRsw%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjELX%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIGviOyVJwYCPma2v4BrnB%2B8sJowukPz6kL1VOQHT05slAiEA%2FVJ0Gz28wZac5%2BKM6t5tWtv3U82lKKpGywW2JnwpWIUq8wQIfhABGgw2OTk3NTMzMDk3MDUiDAspPldLmgcZpiT9airQBETIAkKVvzbVFPTVmAm1Drs5VKZDJH9lEF8FvbzFnhiF9ynJx6ZjQlO%2FH3fgabgxdAKU4rrfRvh4SpXHA6gUxwFRak8ObJZxUeSRK4%2BKsLT%2F0m8lGIbnHxL%2BFfg%2FbraCBaji4Z8%2BiyhE%2FccJ41%2FMPyMXpVEFHytjM8kiBQIGD3tRgwAOk0NPjRwyBqEChn2cTThG95c86v4o00eR%2BtEP0Vx8A%2FrSNUq2d3W2yOlTs%2BWbiLxFxi0ElMbSfiasamgWxIMHovfuwJYP3Y%2BNJADpA1qc6h%2Fpq9he5Sb2JtqRmOO2J0vx7bkGvZknUNoxczN4XQWiMX6mC7%2FEFvAzWxEW99%2Be3Noxiq1ND4xbtVJwEp4BlsEE2JBof8hGMhHeZIjD8uYyQhEKEDHR5%2BgKiicUDtX3XD3kLBr7KsE8hVDNspAbt%2BxMDoZHbAh2V7M0IHK%2BwV2O6lsFZmDljW5j0T%2Fw%2BKqFroIEAyakIhhxokVXQ022JrSBso27%2BPMyGaLnu0ykSxPnM%2Bm43JImePgwe6DMFuv4FZ82IqWTlybUOMVxVDPODdUW3tV5azNDrfqMJ%2Bf%2Fb8HABL%2FXXYGq5e1rIhvkZp5NcUbUsBwTS9L%2BsafY3ZHbLvR0c5kTbE3okg1YbyH%2FINpjo8BUZ81ub8wWsqL8WrMC6ZS2bGZBCR2rkWn8KlTTQRonPn92%2BUyXC%2B%2F3qou7vCLAxWB845KyloH15cTWetvdDDR3H3T%2FcDKMCIfHtdxI9bYleLMSqiHvuth%2FplfGw%2FZWYxTWPC4TqAR9Kl%2B7zO4wgPDG0QY6mAFlfl%2BXOjytfcDKAwYFY94bAew17uD5lk9aje%2F7u4UKfZnUNqTxwk6byBXPOUgBQExGjW6LMZFeBCB7rcKohtAXTrWUOWbeGljx6Dng%2BH3bld%2BMR045LPYa2nhNkTr%2FY8FscOGKyCpb3uuqZU6Y2aU1FDlob6ME4bHzeV7WmMns37AK6U3H52DKGyFYjvs5dafKcdF0%2FnNBSg%3D%3D&amp;Expires=1781645411#services">Explore services</a>
+          <a class="btn-secondary" href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/1120342526/e1f918b3-c7a9-498f-910c-0d3ac66b8e38/homelab-dashboard.html?AWSAccessKeyId=ASIA2F3EMEYEZ73XZHNH&amp;Signature=4cyW36%2BqeO9K9K5Oi4BF%2BzdKRsw%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjELX%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIGviOyVJwYCPma2v4BrnB%2B8sJowukPz6kL1VOQHT05slAiEA%2FVJ0Gz28wZac5%2BKM6t5tWtv3U82lKKpGywW2JnwpWIUq8wQIfhABGgw2OTk3NTMzMDk3MDUiDAspPldLmgcZpiT9airQBETIAkKVvzbVFPTVmAm1Drs5VKZDJH9lEF8FvbzFnhiF9ynJx6ZjQlO%2FH3fgabgxdAKU4rrfRvh4SpXHA6gUxwFRak8ObJZxUeSRK4%2BKsLT%2F0m8lGIbnHxL%2BFfg%2FbraCBaji4Z8%2BiyhE%2FccJ41%2FMPyMXpVEFHytjM8kiBQIGD3tRgwAOk0NPjRwyBqEChn2cTThG95c86v4o00eR%2BtEP0Vx8A%2FrSNUq2d3W2yOlTs%2BWbiLxFxi0ElMbSfiasamgWxIMHovfuwJYP3Y%2BNJADpA1qc6h%2Fpq9he5Sb2JtqRmOO2J0vx7bkGvZknUNoxczN4XQWiMX6mC7%2FEFvAzWxEW99%2Be3Noxiq1ND4xbtVJwEp4BlsEE2JBof8hGMhHeZIjD8uYyQhEKEDHR5%2BgKiicUDtX3XD3kLBr7KsE8hVDNspAbt%2BxMDoZHbAh2V7M0IHK%2BwV2O6lsFZmDljW5j0T%2Fw%2BKqFroIEAyakIhhxokVXQ022JrSBso27%2BPMyGaLnu0ykSxPnM%2Bm43JImePgwe6DMFuv4FZ82IqWTlybUOMVxVDPODdUW3tV5azNDrfqMJ%2Bf%2Fb8HABL%2FXXYGq5e1rIhvkZp5NcUbUsBwTS9L%2BsafY3ZHbLvR0c5kTbE3okg1YbyH%2FINpjo8BUZ81ub8wWsqL8WrMC6ZS2bGZBCR2rkWn8KlTTQRonPn92%2BUyXC%2B%2F3qou7vCLAxWB845KyloH15cTWetvdDDR3H3T%2FcDKMCIfHtdxI9bYleLMSqiHvuth%2FplfGw%2FZWYxTWPC4TqAR9Kl%2B7zO4wgPDG0QY6mAFlfl%2BXOjytfcDKAwYFY94bAew17uD5lk9aje%2F7u4UKfZnUNqTxwk6byBXPOUgBQExGjW6LMZFeBCB7rcKohtAXTrWUOWbeGljx6Dng%2BH3bld%2BMR045LPYa2nhNkTr%2FY8FscOGKyCpb3uuqZU6Y2aU1FDlob6ME4bHzeV7WmMns37AK6U3H52DKGyFYjvs5dafKcdF0%2FnNBSg%3D%3D&amp;Expires=1781645411#backups">Review backups</a>
+        </div>
+      </article>
+      <aside class="panel summary">
+        <div>
+          <p class="muted">Live overview</p>
+          <h3 style="font-family: var(--font-display); font-size: var(--text-xl); letter-spacing: -.04em; margin-top: .35rem;">Version 1 control plane</h3>
+        </div>
+        <div class="summary-grid">
+          <div class="stat"><div class="label">Services</div><div class="value">7</div></div>
+          <div class="stat"><div class="label">Healthy</div><div class="value">6/7</div></div>
+          <div class="stat"><div class="label">Backups</div><div class="value">2 jobs</div></div>
+          <div class="stat"><div class="label">Cloud target</div><div class="value">Azure</div></div>
+        </div>
+        <div class="backup-item">
+          <div class="backup-item-top">
+            <div>
+              <div class="backup-name">App data + system</div>
+              <div class="muted">Last success · 13 min duration · 4 versions</div>
+            </div>
+            <span class="pill">Stable</span>
+          </div>
+          <div class="muted">Source 62.08 GB · Destination 13.49 GB</div>
+          <div class="progress"><div class="bar" style="width: 76%"></div></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section" id="services">
+      <div class="section-head">
+        <div>
+          <h3>Services</h3>
+          <p>What is private, what stays internal, and what becomes public later.</p>
+        </div>
+      </div>
+      <div class="grid services">
+        <article class="panel service-card">
+          <div>
+            <div class="service-top">
+              <div class="service-icon">▶</div>
+              <span class="pill blue">Private</span>
+            </div>
+            <div class="service-name">Plex</div>
+            <p class="service-meta">Streaming and media core. Keep user access simple, but do not expose admin tooling through the portal.</p>
+          </div>
+          <div class="muted">Family media playback and watch flow</div>
+        </article>
+        <article class="panel service-card">
+          <div>
+            <div class="service-top">
+              <div class="service-icon">⬡</div>
+              <span class="pill">Healthy</span>
+            </div>
+            <div class="service-name">Immich</div>
+            <p class="service-meta">Photos and video memories. Best presented as a private family area with clean links and status cards.</p>
+          </div>
+          <div class="muted">Private photo library with future family portal hooks</div>
+        </article>
+        <article class="panel service-card">
+          <div>
+            <div class="service-top">
+              <div class="service-icon">☁</div>
+              <span class="pill">Healthy</span>
+            </div>
+            <div class="service-name">Nextcloud</div>
+            <p class="service-meta">Documents, sync, and file sharing. Ideal for a private app card with status and quick actions.</p>
+          </div>
+          <div class="muted">Cloud storage and sync</div>
+        </article>
+        <article class="panel service-card">
+          <div>
+            <div class="service-top">
+              <div class="service-icon">✦</div>
+              <span class="pill warn">Future public</span>
+            </div>
+            <div class="service-name">Overseerr</div>
+            <p class="service-meta">Best candidate for public access later, once you add a domain and safe reverse proxy or tunnel.</p>
+          </div>
+          <div class="muted">Request portal for family and friends</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="grid two-col">
+        <article class="panel backup-card" id="backups">
+          <div class="section-head" style="margin-bottom: var(--space-4);">
+            <div>
+              <h3>Backup intelligence</h3>
+              <p>Designed to mirror your Duplicati jobs, not just list raw storage numbers.</p>
+            </div>
+          </div>
+          <div class="backup-list">
+            <div class="backup-item">
+              <div class="backup-item-top">
+                <div>
+                  <div class="backup-name">Job 1 · appdata + system</div>
+                  <div class="muted">Azure Blob Storage · healthy incremental state</div>
+                </div>
+                <span class="pill">4 versions</span>
+              </div>
+              <div class="metrics">
+                <div class="metric"><div class="muted">Source</div><div>62.08 GB</div></div>
+                <div class="metric"><div class="muted">Destination</div><div>13.49 GB</div></div>
+                <div class="metric"><div class="muted">Duration</div><div>13 min</div></div>
+              </div>
+            </div>
+            <div class="backup-item">
+              <div class="backup-item-top">
+                <div>
+                  <div class="backup-name">Job 2 · Nextcloud</div>
+                  <div class="muted">Still being tuned and validated</div>
+                </div>
+                <span class="pill blue">Pending</span>
+              </div>
+              <div class="metrics">
+                <div class="metric"><div class="muted">State</div><div>Awaiting run</div></div>
+                <div class="metric"><div class="muted">Goal</div><div>App recovery</div></div>
+                <div class="metric"><div class="muted">Storage</div><div>Azure Blob</div></div>
+              </div>
+            </div>
+            <div class="backup-item">
+              <div class="backup-item-top">
+                <div>
+                  <div class="backup-name">Job 3 · Immich media</div>
+                  <div class="muted">Large photo and video set, likely less frequent</div>
+                </div>
+                <span class="pill warn">Plan</span>
+              </div>
+              <div class="metrics">
+                <div class="metric"><div class="muted">Priority</div><div>High value</div></div>
+                <div class="metric"><div class="muted">Cadence</div><div>Weekly</div></div>
+                <div class="metric"><div class="muted">Cost watch</div><div>Important</div></div>
+              </div>
+            </div>
+          </div>
+        </article>
+        <aside class="panel timeline-card">
+          <div class="section-head" style="margin-bottom: var(--space-4);">
+            <div>
+              <h3>Roadmap</h3>
+              <p>Build this in simple phases so Azure adds polish without adding chaos.</p>
+            </div>
+          </div>
+          <div class="timeline-list">
+            <div class="timeline-item">
+              <div class="timeline-item-top">
+                <strong>Phase 1</strong>
+                <span class="pill">Now</span>
+              </div>
+              <p class="muted">Launch this dashboard on Azure Static Web Apps from GitHub and make it your front page.</p>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-item-top">
+                <strong>Phase 2</strong>
+                <span class="pill blue">Next</span>
+              </div>
+              <p class="muted">Add Azure Functions for webhook alerts from backups, health checks, and future notification routes.</p>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-item-top">
+                <strong>Phase 3</strong>
+                <span class="pill warn">Later</span>
+              </div>
+              <p class="muted">Add a domain, then expose only Overseerr publicly behind a proper reverse proxy or tunnel.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <p class="footer-note">Starter dashboard for Azure + Unraid. Replace demo values with live data once your webhook layer is ready.</p>
+  </main>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const toggle = document.querySelector('[data-theme-toggle]');
+      let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.setAttribute('data-theme', theme);
+      const syncLabel = () => toggle.textContent = root.getAttribute('data-theme') === 'dark' ? '☀︎' : '☾';
+      syncLabel();
+      toggle.addEventListener('click', () => {
+        theme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', theme);
+        syncLabel();
+      });
+    })();
+  </script>
+
+
+</body></html>
