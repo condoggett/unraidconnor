@@ -11,7 +11,7 @@
 </head>
 <body>
   <main class="shell">
-    <header class="topbar"><div class="brand"><div class="logo" aria-hidden="true">⬡</div><div><h1>Connor Homelab</h1><p>Private access hub for your Unraid services</p></div></div><div class="actions"><button class="ghost" type="button" data-configure>Configure links</button><button class="ghost" type="button" data-theme-toggle aria-label="Toggle colour theme">☾</button></div></header>
+    <header class="topbar"><div class="brand"><div class="logo" aria-hidden="true">⬡</div><div><h1>Connor Homelab</h1><p>Private access hub for your Unraid services</p></div></div><div class="actions"><span class="muted" id="account-state">Signed in</span><a class="ghost" href="/.auth/logout">Sign out</a><button class="ghost" type="button" data-configure>Configure links</button><button class="ghost" type="button" data-theme-toggle aria-label="Toggle colour theme">☾</button></div></header>
     <section class="hero"><article class="panel hero-main"><span class="eyebrow"><b>●</b> Secure homelab access</span><h2>Your Unraid server, at a glance.</h2><p>A calm front door for the apps you use every day. Sign in once, then launch the services you’ve chosen to share through your protected Cloudflare tunnel.</p><div class="cta"><button class="button primary" type="button" data-open="unraid">Open Unraid</button><a class="button secondary" href="#applications">Open applications</a></div></article><aside class="panel overview"><p class="muted">Protected configuration</p><h3>Unraid access ready</h3><div class="stats"><div class="stat"><small>Server link</small><strong id="unraid-state">Configured</strong></div><div class="stat"><small>Connection</small><strong>Cloudflare tunnel</strong></div><div class="stat"><small>Live monitoring</small><strong id="status-state">Checking…</strong></div><div class="stat"><small>Memory used</small><strong id="memory-state">—</strong></div><div class="stat"><small>CPU load</small><strong id="load-state">—</strong></div><div class="stat"><small>Uptime</small><strong id="uptime-state">—</strong></div></div><div class="notice">Every published hostname is protected by Cloudflare Access. Service passwords still apply inside each app.</div></aside></section>
     <section class="section"><div class="section-head"><div><h2>Docker workloads</h2><p class="muted">Live container inventory from Unraid.</p></div><span class="pill private" id="docker-state">Checking…</span></div><div class="panel" id="docker-list" style="padding:1rem"><p class="muted">Loading containers…</p></div></section>
     <section class="section" id="applications"><div class="section-head"><div><h2>Applications</h2><p class="muted">One-click private links, without publishing them in the source code.</p></div></div><div class="grid">
@@ -47,6 +47,9 @@
   </script>
   <script>
     fetch('/api/status').then(r=>r.json()).then(s=>{if(!s.storage)return;const stats=document.querySelector('.stats');for(const [key,label] of [['user','User share'],['cache','Cache pool']]){const d=s.storage[key];if(!d||!stats)continue;const card=document.createElement('div');card.className='stat';card.innerHTML='<small>'+label+'</small><strong>'+d.usedPercent+'% used</strong>';stats.appendChild(card)}}).catch(()=>{});
+  </script>
+  <script>
+    fetch('/.auth/me').then(r=>r.ok?r.json():null).then(me=>{const user=me?.clientPrincipal?.userDetails;if(user){const el=document.querySelector('#account-state');if(el)el.textContent='Signed in as '+user}}).catch(()=>{});
   </script>
 </body>
 </html>
