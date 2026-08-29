@@ -1,0 +1,1 @@
+{"name":"unraid-status-bridge","private":true,"version":"1.0.0","main":"server.js","dependencies":{"dockerode":"^4.0.7"}}
