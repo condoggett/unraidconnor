@@ -52,5 +52,9 @@
   <script>
     fetch('/.auth/me').then(r=>r.ok?r.json():null).then(me=>{const user=me?.clientPrincipal?.userDetails;if(user){const el=document.querySelector('#account-state');if(el)el.textContent='Signed in as '+user}}).catch(()=>{});
   </script>
+  <script>
+    (()=>{const admin=document.querySelector('.admin-panel');if(admin)admin.id='admin';const nav=document.createElement('aside');nav.className='portal-nav';nav.innerHTML='<div class="portal-nav-title">Connor Homelab</div><a href="#top">Overview</a><a href="#applications">Applications</a><a href="#docker-list">Docker workloads</a><a href="#admin">Access & administration</a>';document.body.prepend(nav);const style=document.createElement('style');style.textContent='.portal-nav{position:fixed;inset:0 auto 0 0;width:210px;padding:1.5rem 1rem;background:color-mix(in srgb,var(--surface) 96%,transparent);border-right:1px solid var(--border);z-index:5}.portal-nav-title{font-weight:800;letter-spacing:-.04em;margin:.25rem .65rem 1.5rem}.portal-nav a{display:block;padding:.7rem .75rem;margin:.25rem 0;border-radius:10px;color:var(--muted);font-weight:650}.portal-nav a:hover{background:var(--offset);color:var(--text)}body{padding-left:210px}body>.shell{width:min(1120px,calc(100% - 2rem))}@media(max-width:820px){.portal-nav{position:static;width:auto;display:flex;align-items:center;gap:.35rem;padding:.65rem 1rem;border-right:0;border-bottom:1px solid var(--border);overflow:auto}.portal-nav-title{margin:0 .6rem 0 0;white-space:nowrap}.portal-nav a{margin:0;white-space:nowrap;padding:.5rem .65rem}body{padding-left:0}}';document.head.appendChild(style)})();
+  </script>
+  <script>document.body.id='top';</script>
 </body>
 </html>
