@@ -1,5 +1,6 @@
 {
   "routes": [
+    { "route": "/api/status", "allowedRoles": ["anonymous"] },
     { "route": "/*", "allowedRoles": ["authenticated"] }
   ],
   "responseOverrides": {
