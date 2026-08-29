@@ -1,0 +1,6 @@
+{
+  "name": "unraid-dashboard-api",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": { "@azure/functions": "^4.5.0" }
+}
