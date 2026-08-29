@@ -39,5 +39,8 @@
   <script>
     fetch('/api/status').then(r=>r.json()).then(s=>{if(!s.docker)return;const badge=document.querySelector('#docker-state'),list=document.querySelector('#docker-list');if(badge)badge.textContent=s.docker.running+' / '+s.docker.total+' running';if(list)list.innerHTML=s.docker.containers?.length?s.docker.containers.map(c=>'<div style="display:flex;justify-content:space-between;gap:1rem;padding:.65rem 0;border-bottom:1px solid var(--border)"><strong>'+c.name+'</strong><span class="muted">'+c.state+' · '+c.status+'</span></div>').join(''):'<p class="muted">No containers found.</p>'}).catch(()=>{});
   </script>
+  <script>
+    fetch('/api/status').then(r=>r.json()).then(s=>{const containers=s.docker?.containers||[],names=new Set(containers.filter(c=>c.state==='running').map(c=>c.name.toLowerCase()));const aliases={unraid:null,plex:'plex',immich:'immich',nextcloud:'nextcloud',overseerr:'seerr',qbittorrent:'qbittorrent',radarr:'radarr',sonarr:'sonarr',duplicati:'duplicati',fileflows:'fileflows',maintainerr:'maintainerr',mealie:'mealiev1'};document.querySelectorAll('#applications .app-card').forEach(card=>{const title=card.querySelector('h3')?.textContent.trim().toLowerCase(),name=aliases[title];if(!name)return;const pill=card.querySelector('.pill');if(!pill)return;const running=names.has(name);pill.textContent=running?'Running':'Stopped';pill.classList.toggle('private',running);pill.style.color=running?'var(--good)':'#a33';pill.style.background=running?'color-mix(in srgb,var(--good) 14%,transparent)':'color-mix(in srgb,#a33 14%,transparent)'})}).catch(()=>{});
+  </script>
 </body>
 </html>
