@@ -45,5 +45,8 @@
   <script>
     const extraApps=[['Prowlarr','Indexer management for the media stack.','https://prowlarr.conhomelab.uk','⌕'],['Cleanuparr','Automated queue and media cleanup.','https://cleanuparr.conhomelab.uk','⌘'],['FlareSolverr','Challenge-solving support service.','https://flaresolverr.conhomelab.uk','◌']];const extraGrid=document.querySelector('#applications .grid');extraApps.forEach(([name,description,url,icon])=>{if(!extraGrid||[...extraGrid.querySelectorAll('h3')].some(h=>h.textContent===name))return;const card=document.createElement('article');card.className='panel app-card';card.innerHTML='<div class="card-top"><div class="icon">'+icon+'</div><span class="pill private">Private</span></div><h3>'+name+'</h3><p>'+description+'</p><a class="button secondary" href="'+url+'" target="_blank" rel="noopener">Open '+name+'</a>';extraGrid.insertBefore(card,extraGrid.lastElementChild)});
   </script>
+  <script>
+    fetch('/api/status').then(r=>r.json()).then(s=>{if(!s.storage)return;const stats=document.querySelector('.stats');for(const [key,label] of [['user','User share'],['cache','Cache pool']]){const d=s.storage[key];if(!d||!stats)continue;const card=document.createElement('div');card.className='stat';card.innerHTML='<small>'+label+'</small><strong>'+d.usedPercent+'% used</strong>';stats.appendChild(card)}}).catch(()=>{});
+  </script>
 </body>
 </html>
