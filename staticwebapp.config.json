@@ -1,10 +1,10 @@
 {
   "routes": [
     { "route": "/api/status", "allowedRoles": ["anonymous"] },
-    { "route": "/*", "allowedRoles": ["authenticated"] }
+    { "route": "/*", "allowedRoles": ["anonymous"] }
   ],
   "responseOverrides": {
-    "401": { "statusCode": 302, "redirect": "/.auth/login/aad" }
+    "401": { "statusCode": 302, "redirect": "/" }
   },
   "navigationFallback": {
     "rewrite": "/index.html",
