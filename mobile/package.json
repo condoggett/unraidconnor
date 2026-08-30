@@ -1,0 +1,7 @@
+{
+  "name": "connor-homelab-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {"sync": "cap sync android", "open": "cap open android", "build": "cap build android"},
+  "dependencies": {"@capacitor/android": "^7.4.3", "@capacitor/core": "^7.4.3", "@capacitor/cli": "^7.4.3"}
+}
