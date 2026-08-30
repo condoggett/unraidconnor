@@ -1,0 +1,12 @@
+{
+  "appId": "uk.conhomelab.portal",
+  "appName": "Connor Homelab",
+  "webDir": "www",
+  "server": {
+    "url": "https://conhomelab.uk",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

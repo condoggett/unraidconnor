@@ -1,0 +1,4 @@
+mobile/node_modules/
+mobile/android/
+mobile/.toolchain/
+mobile/*.apk
