@@ -1,0 +1,14 @@
+{
+  "name": "Connor Homelab",
+  "short_name": "Homelab",
+  "description": "Private access hub for Connor's homelab services.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f6f2",
+  "theme_color": "#01696f",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
