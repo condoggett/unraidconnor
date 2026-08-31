@@ -1,17 +1,29 @@
-# conhomelab_app
+# Connor Homelab mobile app
 
-A new Flutter project.
+The native Flutter app for Android and iPhone. It signs in with the existing
+Supabase account, displays only the services assigned to the signed-in person,
+shows Unraid availability, and opens protected Homelab services.
 
-## Getting Started
+## Open it in Android Studio
 
-This project is a starting point for a Flutter application.
+1. Open **Android Studio**.
+2. Choose **Open** and select this `native_app` folder.
+3. Wait for the Gradle sync at the bottom to finish.
+4. Connect an Android phone with USB debugging enabled, or start an emulator.
+5. Select that device from the top bar and press the green **Run** triangle.
 
-A few resources to get you started if this is your first Flutter project:
+For a shareable test APK, run the following in the Android Studio terminal:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+C:\Flutter\flutter\bin\flutter.bat build apk --debug
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The output is `build\app\outputs\flutter-apk\app-debug.apk`. The `build`
+folder is generated and deliberately excluded from Git. Use a release signing
+key before distributing the app beyond personal testing.
+
+## Release roadmap
+
+- **1.2** — Seerr is first for assigned family accounts.
+- **1.3** — per-user themes, dashboards, favourite services, and layout.
+
