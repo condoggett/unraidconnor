@@ -18,7 +18,7 @@ insert into public.apps (id, name, description, url, icon, sort_order) values
   ('plex', 'Plex', 'Family media playback and libraries.', 'https://plex.conhomelab.uk', '▶', 20),
   ('immich', 'Immich', 'Photo and video library.', 'https://photos.conhomelab.uk', '◉', 30),
   ('nextcloud', 'Nextcloud', 'Files, documents and sync.', 'https://nextcloud.conhomelab.uk', '☁', 40),
-  ('requests', 'Requests', 'Media requests for family and friends.', 'https://requests.conhomelab.uk', '✦', 50),
+  ('requests', 'Seerr', 'Media requests for family and friends.', 'https://requests.conhomelab.uk', '✦', 50),
   ('downloads', 'Downloads', 'Download client and queue management.', 'https://downloads.conhomelab.uk', '↯', 60),
   ('radarr', 'Radarr', 'Movie automation and library management.', 'https://radarr.conhomelab.uk', '▤', 70),
   ('sonarr', 'Sonarr', 'TV automation and library management.', 'https://sonarr.conhomelab.uk', '▤', 80),

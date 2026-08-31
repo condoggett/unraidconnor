@@ -161,6 +161,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final rows = admin ? <dynamic>[] : await _client.from('user_app_access').select('app_id').eq('user_id', user.id);
       final allowed = rows.map((row) => row['app_id'] as String).toSet();
       final apps = (allApps as List).cast<Map<String, dynamic>>().where((app) => admin || allowed.contains(app['id'])).toList();
+      // Seerr is the family-facing media-request service, so it is the first
+      // destination for non-admin family accounts whenever it is assigned.
+      if (!admin) {
+        apps.sort((left, right) {
+          final leftPriority = left['id'] == 'requests' ? 0 : 1;
+          final rightPriority = right['id'] == 'requests' ? 0 : 1;
+          return leftPriority != rightPriority
+              ? leftPriority.compareTo(rightPriority)
+              : (left['sort_order'] as int).compareTo(right['sort_order'] as int);
+        });
+      }
       final status = await _fetchStatus();
       if (!mounted) return;
       setState(() {
