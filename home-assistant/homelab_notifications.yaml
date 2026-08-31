@@ -1,0 +1,34 @@
+# Add this package to Home Assistant, then put the two values in secrets.yaml.
+# It uses the same secure Supabase Edge Function as Unraid and the Android app.
+rest_command:
+  connor_homelab_notify:
+    url: !secret connor_homelab_notification_url
+    method: POST
+    headers:
+      Content-Type: application/json
+      Authorization: !secret connor_homelab_supabase_auth
+      x-notification-secret: !secret connor_homelab_notification_secret
+    payload: >-
+      {{ {'audience':'subscribed','category':'home_assistant','title': title,'body': message,'priority': priority | default('normal'),'data': {'source':'home_assistant'}} | tojson }}
+
+script:
+  connor_homelab_notification:
+    alias: Connor Homelab notification
+    mode: queued
+    fields:
+      title: { required: true, selector: { text: {} } }
+      message: { required: true, selector: { text: {} } }
+      priority: { selector: { select: { options: [normal, critical] } } }
+    sequence:
+      - service: rest_command.connor_homelab_notify
+        data:
+          title: "{{ title }}"
+          message: "{{ message }}"
+          priority: "{{ priority | default('normal') }}"
+
+# Example automation action:
+# - service: script.connor_homelab_notification
+#   data:
+#     title: "Front door"
+#     message: "Someone is at the front door."
+#     priority: critical

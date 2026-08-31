@@ -14,6 +14,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'notification_screens.dart';
+import 'seerr_screen.dart';
+
 const _supabaseUrl = 'https://yrvmanmrzxceqahopfec.supabase.co';
 const _supabaseKey = 'sb_publishable_a1KjGdyaOL4ynlIUJKXhog_cu6xa2oe';
 const _portalUrl = 'https://conhomelab.uk';
@@ -278,6 +281,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _openApp(Map<String, dynamic> app) async {
+    if (app['id'] == 'requests') {
+      await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SeerrScreen(url: app['url'] as String)));
+      return;
+    }
     final opened = await launchUrl(Uri.parse(app['url'] as String), mode: LaunchMode.externalApplication);
     if (opened) {
       await _client.from('audit_events').insert({'user_id': _client.auth.currentUser!.id, 'event_type': 'app_opened', 'app_id': app['id']});
@@ -397,7 +404,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Connor Homelab'), actions: [IconButton(onPressed: _personalise, tooltip: 'Personalise dashboard', icon: const Icon(Icons.tune)), IconButton(onPressed: _checkForUpdates, tooltip: 'Check for updates', icon: const Icon(Icons.system_update_outlined)), IconButton(onPressed: () => _client.auth.signOut(), tooltip: 'Sign out', icon: const Icon(Icons.logout))]),
+        appBar: AppBar(title: const Text('Connor Homelab'), actions: [
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationHistoryScreen())), tooltip: 'Notification history', icon: const Icon(Icons.notifications_outlined)),
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())), tooltip: 'Notification settings', icon: const Icon(Icons.notifications_active_outlined)),
+          IconButton(onPressed: _personalise, tooltip: 'Personalise dashboard', icon: const Icon(Icons.tune)),
+          IconButton(onPressed: _checkForUpdates, tooltip: 'Check for updates', icon: const Icon(Icons.system_update_outlined)),
+          IconButton(onPressed: () => _client.auth.signOut(), tooltip: 'Sign out', icon: const Icon(Icons.logout)),
+        ]),
         body: RefreshIndicator(
           onRefresh: _load,
           child: _loading ? const Center(child: CircularProgressIndicator()) : ListView(padding: const EdgeInsets.all(18), children: [
