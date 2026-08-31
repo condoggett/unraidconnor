@@ -1,8 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:crypto/crypto.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -219,15 +224,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
         messenger.showSnackBar(const SnackBar(content: Text('You have the latest version.')));
         return;
       }
-      final url = Uri.tryParse('${release['downloadUrl']}');
       await showDialog<void>(context: context, builder: (context) => AlertDialog(
         title: Text('Update ${release['version'] ?? ''} available'),
         content: Text('${release['notes'] ?? 'A new Homelab app update is ready.'}\n\nAndroid will ask you to confirm the install.'),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Later')), FilledButton(onPressed: url == null ? null : () async { await launchUrl(url, mode: LaunchMode.externalApplication); if (context.mounted) Navigator.pop(context); }, child: const Text('Download update'))],
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Later')),
+          FilledButton(onPressed: release['downloadUrl'] == null ? null : () { Navigator.pop(context); _downloadAndInstallUpdate(release); }, child: const Text('Download update')),
+        ],
       ));
     } catch (_) {
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(const SnackBar(content: Text('No published app update yet.')));
+    }
+  }
+
+  Future<void> _downloadAndInstallUpdate(Map<String, dynamic> release) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final url = Uri.tryParse('${release['downloadUrl']}');
+    final expectedHash = '${release['sha256'] ?? ''}'.trim().toLowerCase();
+    final trustedRelease = url != null &&
+        url.scheme == 'https' &&
+        url.host == 'github.com' &&
+        url.path.startsWith('/condoggett/unraidconnor/releases/download/');
+    if (!trustedRelease || !RegExp(r'^[a-f0-9]{64}$').hasMatch(expectedHash)) {
+      messenger.showSnackBar(const SnackBar(content: Text('This update is not a verified Connor Homelab release.')));
+      return;
+    }
+    try {
+      messenger.showSnackBar(const SnackBar(content: Text('Downloading verified update…')));
+      final directory = await getApplicationDocumentsDirectory();
+      final version = '${release['version'] ?? 'latest'}'.replaceAll(RegExp(r'[^0-9A-Za-z._-]'), '_');
+      final apk = File('${directory.path}/Connor-Homelab-$version.apk');
+      await Dio().download(url.toString(), apk.path);
+      final actualHash = await sha256.bind(apk.openRead()).first;
+      if (actualHash.toString().toLowerCase() != expectedHash) {
+        await apk.delete();
+        throw Exception('The download did not pass its security check.');
+      }
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(const SnackBar(content: Text('Download complete. Confirm Android’s install prompt to update.')));
+      final result = await OpenFilex.open(apk.path, type: 'application/vnd.android.package-archive');
+      if (result.type != ResultType.done && mounted) {
+        messenger.showSnackBar(const SnackBar(content: Text('Allow Connor Homelab to install unknown apps, then try Update again.')));
+      }
+    } catch (error) {
+      if (mounted) {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text('Update failed: $error')));
+      }
     }
   }
 
