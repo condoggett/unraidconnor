@@ -8,8 +8,11 @@ plugins {
 }
 
 val signingProperties = Properties()
-val signingPropertiesFile = file(System.getProperty("user.home") + "/AppData/Local/ConnorHomelabBuild/signing/key.properties")
-if (signingPropertiesFile.exists()) {
+val signingPropertiesFile = sequenceOf(
+    file("../key.properties"),
+    file(System.getProperty("user.home") + "/AppData/Local/ConnorHomelabBuild/signing/key.properties"),
+).firstOrNull { it.exists() }
+if (signingPropertiesFile != null) {
     signingPropertiesFile.inputStream().use(signingProperties::load)
 }
 
