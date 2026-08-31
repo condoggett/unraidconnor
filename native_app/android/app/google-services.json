@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "549333809265",
+    "project_id": "connor-homelab-notifications",
+    "storage_bucket": "connor-homelab-notifications.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:549333809265:android:da57344a5fe5ca5cec83d0",
+        "android_client_info": {
+          "package_name": "uk.conhomelab.conhomelab_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpRZoYQfdYLywf0t24UX1aJznEM2A4eRM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

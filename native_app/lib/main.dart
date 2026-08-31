@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
@@ -17,6 +19,7 @@ const _portalUrl = 'https://conhomelab.uk';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
   runApp(const HomelabApp());
 }
@@ -162,6 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final user = _client.auth.currentUser!;
+      await _registerForNotifications(user.id);
       final profile = await _client.from('profiles').select('display_name, role').eq('id', user.id).maybeSingle();
       final admin = profile?['role'] == 'admin';
       final allApps = await _client.from('apps').select('id, name, description, url, icon, sort_order').eq('enabled', true).order('sort_order');
@@ -204,6 +208,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) setState(() => _error = 'Could not load your Homelab: $error');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _registerForNotifications(String userId) async {
+    try {
+      final settings = await FirebaseMessaging.instance.requestPermission();
+      if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await _client.from('user_devices').upsert({
+        'user_id': userId,
+        'token': token,
+        'platform': 'android',
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (_) {
+      // Notifications are optional; a failed registration must not block apps.
     }
   }
 
