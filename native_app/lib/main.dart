@@ -152,6 +152,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _admin = false;
   List<Map<String, dynamic>> _apps = [];
   Map<String, dynamic>? _status;
+  Set<String> _favourites = {};
+  Set<String> _hidden = {};
 
   @override
   void initState() { super.initState(); _load(); }
@@ -166,6 +168,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final rows = admin ? <dynamic>[] : await _client.from('user_app_access').select('app_id').eq('user_id', user.id);
       final allowed = rows.map((row) => row['app_id'] as String).toSet();
       final apps = (allApps as List).cast<Map<String, dynamic>>().where((app) => admin || allowed.contains(app['id'])).toList();
+      final preferences = await _client.from('user_preferences').select('favourite_app_ids, hidden_app_ids').eq('user_id', user.id).maybeSingle();
+      final favourites = ((preferences?['favourite_app_ids'] as List?) ?? const []).map((id) => '$id').toSet();
+      final hidden = ((preferences?['hidden_app_ids'] as List?) ?? const []).map((id) => '$id').toSet();
       // Seerr is the family-facing media-request service, so it is the first
       // destination for non-admin family accounts whenever it is assigned.
       if (!admin) {
@@ -177,6 +182,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               : (left['sort_order'] as int).compareTo(right['sort_order'] as int);
         });
       }
+      apps.sort((left, right) {
+        final leftFavourite = favourites.contains(left['id']) ? 0 : 1;
+        final rightFavourite = favourites.contains(right['id']) ? 0 : 1;
+        return leftFavourite != rightFavourite
+            ? leftFavourite.compareTo(rightFavourite)
+            : (left['sort_order'] as int).compareTo(right['sort_order'] as int);
+      });
       final status = await _fetchStatus();
       if (!mounted) return;
       setState(() {
@@ -185,6 +197,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _admin = admin;
         _apps = apps;
         _status = status;
+        _favourites = favourites;
+        _hidden = hidden;
       });
     } catch (error) {
       if (mounted) setState(() => _error = 'Could not load your Homelab: $error');
@@ -206,6 +220,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (opened) {
       await _client.from('audit_events').insert({'user_id': _client.auth.currentUser!.id, 'event_type': 'app_opened', 'app_id': app['id']});
     }
+  }
+
+  Future<void> _personalise() async {
+    final favourites = {..._favourites};
+    final hidden = {..._hidden};
+    final messenger = ScaffoldMessenger.of(context);
+    await showDialog<void>(context: context, builder: (context) => StatefulBuilder(builder: (context, setDialogState) => AlertDialog(
+      title: const Text('Personalise your dashboard'),
+      content: SizedBox(width: 420, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: _apps.map((app) {
+        final id = app['id'] as String;
+        return ListTile(
+          title: Text(app['name'] as String),
+          subtitle: Text(hidden.contains(id) ? 'Hidden from your home screen' : favourites.contains(id) ? 'Pinned to the top' : 'Shown normally'),
+          trailing: PopupMenuButton<String>(
+            onSelected: (choice) => setDialogState(() {
+              if (choice == 'favourite') { favourites.add(id); hidden.remove(id); }
+              if (choice == 'normal') { favourites.remove(id); hidden.remove(id); }
+              if (choice == 'hide') { hidden.add(id); favourites.remove(id); }
+            }),
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'favourite', child: Text('Pin to top')),
+              PopupMenuItem(value: 'normal', child: Text('Show normally')),
+              PopupMenuItem(value: 'hide', child: Text('Hide')),
+            ],
+          ),
+        );
+      }).toList()))),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: () async {
+          await _client.from('user_preferences').upsert({
+            'user_id': _client.auth.currentUser!.id,
+            'favourite_app_ids': favourites.toList(),
+            'hidden_app_ids': hidden.toList(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          });
+          if (!context.mounted) return;
+          Navigator.pop(context);
+          messenger.showSnackBar(const SnackBar(content: Text('Your dashboard preferences were saved.')));
+          _load();
+        }, child: const Text('Save')),
+      ],
+    )));
   }
 
   Future<void> _checkForUpdates() async {
@@ -278,7 +335,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Connor Homelab'), actions: [IconButton(onPressed: _checkForUpdates, tooltip: 'Check for updates', icon: const Icon(Icons.system_update_outlined)), IconButton(onPressed: () => _client.auth.signOut(), tooltip: 'Sign out', icon: const Icon(Icons.logout))]),
+        appBar: AppBar(title: const Text('Connor Homelab'), actions: [IconButton(onPressed: _personalise, tooltip: 'Personalise dashboard', icon: const Icon(Icons.tune)), IconButton(onPressed: _checkForUpdates, tooltip: 'Check for updates', icon: const Icon(Icons.system_update_outlined)), IconButton(onPressed: () => _client.auth.signOut(), tooltip: 'Sign out', icon: const Icon(Icons.logout))]),
         body: RefreshIndicator(
           onRefresh: _load,
           child: _loading ? const Center(child: CircularProgressIndicator()) : ListView(padding: const EdgeInsets.all(18), children: [
@@ -292,7 +349,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text('Your apps', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 10),
             if (_apps.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No apps have been assigned to this account yet. Ask an admin to grant access.'))),
-            ..._apps.map((app) => Card(child: ListTile(leading: CircleAvatar(child: Text((app['icon'] as String?)?.isNotEmpty == true ? app['icon'] as String : '•')), title: Text(app['name'] as String), subtitle: Text((app['description'] as String?) ?? ''), trailing: const Icon(Icons.open_in_new), onTap: () => _openApp(app)))),
+            ..._apps.where((app) => !_hidden.contains(app['id'])).map((app) => Card(child: ListTile(leading: CircleAvatar(child: Text((app['icon'] as String?)?.isNotEmpty == true ? app['icon'] as String : '•')), title: Text(app['name'] as String), subtitle: Text((app['description'] as String?) ?? ''), trailing: const Icon(Icons.open_in_new), onTap: () => _openApp(app)))),
             const SizedBox(height: 18),
             OutlinedButton.icon(onPressed: _checkForUpdates, icon: const Icon(Icons.system_update_outlined), label: const Text('Check for app updates')),
             const SizedBox(height: 10),

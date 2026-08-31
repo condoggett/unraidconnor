@@ -1,8 +1,8 @@
 {
-  "version": "2.2.1",
-  "versionCode": 4,
-  "downloadUrl": "https://github.com/condoggett/unraidconnor/releases/download/v2.2.1/Connor-Homelab-2.2.1.apk",
-  "sha256": "57ba81aa3b7d7a698163914892993cfe0ab7a5a98ebda7d315067d362aa1bb59",
-  "notes": "Version 2.2.1 test release.",
+  "version": "2.3.0",
+  "versionCode": 5,
+  "downloadUrl": "https://github.com/condoggett/unraidconnor/releases/download/v2.3.0/Connor-Homelab-2.3.0.apk",
+  "sha256": "150f3c993f15bf2c97aabff4c6ccb70cf3eca10d92578d776851c0412bb2284e",
+  "notes": "Version 2.3.0: personalise your dashboard by pinning or hiding apps.",
   "publishedAt": "2026-08-31T12:20:00Z"
 }
