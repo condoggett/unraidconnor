@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -17,9 +18,49 @@ const _supabaseUrl = 'https://yrvmanmrzxceqahopfec.supabase.co';
 const _supabaseKey = 'sb_publishable_a1KjGdyaOL4ynlIUJKXhog_cu6xa2oe';
 const _portalUrl = 'https://conhomelab.uk';
 
+final _localNotifications = FlutterLocalNotificationsPlugin();
+const _notificationChannel = AndroidNotificationChannel(
+  'homelab_updates',
+  'Homelab updates',
+  description: 'Updates from Connor Homelab',
+  importance: Importance.high,
+);
+
+Future<void> _configureNotifications() async {
+  const initializationSettings = InitializationSettings(
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+  );
+  await _localNotifications.initialize(initializationSettings);
+  await _localNotifications
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(_notificationChannel);
+
+  FirebaseMessaging.onMessage.listen((message) {
+    final notification = message.notification;
+    if (notification == null) return;
+    _localNotifications.show(
+      notification.hashCode,
+      notification.title ?? 'Connor Homelab',
+      notification.body ?? '',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'homelab_updates',
+          'Homelab updates',
+          channelDescription: 'Updates from Connor Homelab',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+    );
+  });
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await _configureNotifications();
   await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
   runApp(const HomelabApp());
 }
