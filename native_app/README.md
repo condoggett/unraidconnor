@@ -22,8 +22,101 @@ The output is `build\app\outputs\flutter-apk\app-debug.apk`. The `build`
 folder is generated and deliberately excluded from Git. Use a release signing
 key before distributing the app beyond personal testing.
 
+## Full release guide: Android Studio → GitHub → Azure
+
+This is the normal, repeatable process for publishing an update. The release
+workflow signs the APK on GitHub, so do **not** add the signing key or its
+passwords to Android Studio, the repository, or any document.
+
+### 1. Open and change the app
+
+Open this folder in Android Studio:
+
+```text
+C:\Users\conno\OneDrive\Documents\GitHub\unraidconnor\native_app
+```
+
+The main places to look are:
+
+| File | What it controls |
+| --- | --- |
+| `lib/main.dart` | Sign-in, the main dashboard, update checking and app navigation. |
+| `lib/notification_screens.dart` | Notification history, Now Available and release notes. |
+| `lib/service_hubs.dart` | Home Assistant and Unraid in-app hub screens. |
+| `lib/seerr_screen.dart` | The protected in-app browser used for Homelab services. |
+| `pubspec.yaml` | App version and package dependencies. |
+
+Run the app on your phone or emulator with the green **Run** button. Before
+publishing, open Android Studio's Terminal and run:
+
+```powershell
+C:\Flutter\flutter\bin\flutter.bat analyze
+```
+
+Fix any errors shown before continuing.
+
+### 2. Increase the version
+
+In `pubspec.yaml`, increase both parts of the version. For example:
+
+```yaml
+version: 2.6.1+20
+```
+
+`2.6.1` is the version people see. `20` is Android's internal version code and
+must be higher than every previous release. Never reuse a published version or
+version code.
+
+### 3. Commit and push with GitHub Desktop
+
+Open GitHub Desktop and select the `unraidconnor` repository.
+
+1. Review the changed files.
+2. Enter a clear summary, such as `Add family theme choices`.
+3. Click **Commit to main**.
+4. Click **Push origin**.
+
+Do not commit generated folders such as `native_app/build`, an APK, a signing
+key, passwords, Supabase service-role keys, or notification secrets.
+
+### 4. Build the signed release on GitHub
+
+1. Open `https://github.com/condoggett/unraidconnor/actions`.
+2. Choose **Build Android release**.
+3. Click **Run workflow**, leave branch as `main`, then click **Run workflow**
+   again.
+4. Wait for the workflow to show a green tick.
+
+The workflow builds and signs the APK using encrypted GitHub secrets, creates
+the GitHub Release, calculates the APK SHA-256 security hash, and writes
+`app-update.json`.
+
+### 5. Azure deployment and phone update
+
+The same workflow asks the Azure Static Web Apps workflow to deploy the new
+`app-update.json` file. It waits for that deployment before sending the app
+update notification, avoiding the old situation where a notification arrived
+before the update was actually available.
+
+On the phone, open **Connor Homelab** and choose **Check for updates**. The
+app verifies that the downloaded APK is from the Connor Homelab GitHub release
+and matches the published SHA-256 hash before Android shows the install prompt.
+
+### Website-only changes
+
+For a website-only change, edit the root `index.html` file, commit it in
+GitHub Desktop and click **Push origin**. Azure Static Web Apps deploys site
+changes automatically. No Android build is needed.
+
+### If a GitHub Actions release fails
+
+Open the failed run in **Actions**, select the failed step, and copy its error
+into Codex. Do not keep rerunning a failed workflow without changing the cause:
+reruns can overwrite a release asset while keeping the same version number.
+Fix the source, increase the version if the failed run got as far as publishing
+anything, then commit, push and run a new release.
+
 ## Release roadmap
 
 - **1.2** — Seerr is first for assigned family accounts.
 - **1.3** — per-user themes, dashboards, favourite services, and layout.
-
