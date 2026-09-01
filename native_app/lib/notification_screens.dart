@@ -282,6 +282,14 @@ class ReleaseNotesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: const [
         _ReleaseNote(
+          version: '3.4.0',
+          changes: [
+            'The app now checks for a newer verified update automatically when you open it, and only prompts when one is available.',
+            'Hold the Connor Homelab app icon for direct in-app shortcuts to Home Assistant, Seerr, Immich and Unraid.',
+            'Unraid’s last successful status is kept privately on your device and shown clearly if the portal is temporarily offline.',
+          ],
+        ),
+        _ReleaseNote(
           version: '3.3.0',
           changes: [
             'New bottom navigation for Home, Media, Activity, Services and Profile.',

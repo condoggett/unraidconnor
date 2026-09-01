@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="home_assistant" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="Home Assistant">
+        <intent android:action="android.intent.action.VIEW" android:data="conhomelab://service/home-assistant" />
+    </shortcut>
+    <shortcut android:shortcutId="seerr" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="Seerr">
+        <intent android:action="android.intent.action.VIEW" android:data="conhomelab://service/seerr" />
+    </shortcut>
+    <shortcut android:shortcutId="immich" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="Immich">
+        <intent android:action="android.intent.action.VIEW" android:data="conhomelab://service/immich" />
+    </shortcut>
+    <shortcut android:shortcutId="unraid" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="Unraid">
+        <intent android:action="android.intent.action.VIEW" android:data="conhomelab://service/unraid" />
+    </shortcut>
+</shortcuts>

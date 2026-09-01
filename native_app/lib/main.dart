@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_lock.dart';
 import 'navigation_screens.dart';
@@ -28,6 +30,8 @@ const _portalUrl = 'https://conhomelab.uk';
 final _localNotifications = FlutterLocalNotificationsPlugin();
 final _navigatorKey = GlobalKey<NavigatorState>();
 Map<String, dynamic>? _pendingNotificationRoute;
+final _appLinks = AppLinks();
+StreamSubscription<Uri>? _appLinkSubscription;
 const _notificationChannel = AndroidNotificationChannel(
   'homelab_updates',
   'Homelab updates',
@@ -114,10 +118,36 @@ void _openNotificationRoute(Map<String, dynamic> data) {
           title: 'Immich',
           url: 'https://photos.conhomelab.uk',
         )
+      : service == 'unraid'
+      ? const HomelabWebAppScreen(
+          title: 'Unraid',
+          url: 'https://home.conhomelab.uk',
+        )
       : data['version'] != null || category == 'app_update'
       ? const ReleaseNotesScreen()
       : const NotificationHistoryScreen();
   navigator.push(MaterialPageRoute<void>(builder: (_) => destination));
+}
+
+/// Opens a service shortcut created by Android when the app icon is held.
+/// The target stays inside the Homelab app rather than launching a browser.
+void _openAppLink(Uri uri) {
+  if (uri.scheme != 'conhomelab' || uri.host != 'service') return;
+  final service = uri.pathSegments.isEmpty ? '' : uri.pathSegments.first;
+  final route = switch (service) {
+    'home-assistant' => 'home_assistant',
+    'seerr' => 'seerr',
+    'immich' => 'immich',
+    'unraid' => 'unraid',
+    _ => '',
+  };
+  if (route.isNotEmpty) _openNotificationRoute({'service': route});
+}
+
+Future<void> _configureAppLinks() async {
+  final initial = await _appLinks.getInitialLink();
+  if (initial != null) _openAppLink(initial);
+  _appLinkSubscription ??= _appLinks.uriLinkStream.listen(_openAppLink);
 }
 
 void _flushPendingNotificationRoute() {
@@ -133,9 +163,10 @@ Future<void> main() async {
   await _configureNotifications();
   await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
   runApp(const HomelabApp());
-  WidgetsBinding.instance.addPostFrameCallback(
-    (_) => _flushPendingNotificationRoute(),
-  );
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _flushPendingNotificationRoute();
+    _configureAppLinks();
+  });
   final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
   if (initialMessage != null) {
     _openNotificationRoute({
@@ -373,6 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Map<String, dynamic>> _activity = [];
   Timer? _maintenanceTimer;
   int _navigationIndex = 0;
+  bool _automaticUpdateChecked = false;
 
   @override
   void initState() {
@@ -523,6 +555,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _maintenance = maintenance;
         _activity = activity;
       });
+      // Quietly check once per dashboard session. A newer signed release still
+      // gets the normal update dialog; an up-to-date app stays unobtrusive.
+      if (!_automaticUpdateChecked) {
+        _automaticUpdateChecked = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _checkForUpdates(quiet: true);
+        });
+      }
     } catch (error) {
       if (mounted) {
         setState(() => _error = 'Could not load your Homelab: $error');
@@ -550,14 +590,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<Map<String, dynamic>?> _fetchStatus() async {
+    final userId = _client.auth.currentUser?.id;
+    final cacheKey = userId == null ? null : 'unraid_status_$userId';
     try {
       final response = await http
           .get(Uri.parse('$_portalUrl/api/status'))
           .timeout(const Duration(seconds: 8));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final status = jsonDecode(response.body) as Map<String, dynamic>;
+        if (cacheKey != null) {
+          final preferences = await SharedPreferences.getInstance();
+          await preferences.setString(
+            cacheKey,
+            jsonEncode({
+              'status': status,
+              'savedAt': DateTime.now().toUtc().toIso8601String(),
+            }),
+          );
+        }
+        return status;
       }
     } catch (_) {}
+    if (cacheKey != null) {
+      final preferences = await SharedPreferences.getInstance();
+      final saved = preferences.getString(cacheKey);
+      if (saved != null) {
+        try {
+          final snapshot = jsonDecode(saved) as Map<String, dynamic>;
+          final status = Map<String, dynamic>.from(
+            snapshot['status'] as Map<String, dynamic>,
+          );
+          status['_cached'] = true;
+          status['_savedAt'] = snapshot['savedAt'];
+          return status;
+        } catch (_) {
+          // A damaged cache is never allowed to interfere with live status.
+        }
+      }
+    }
     return null;
   }
 
@@ -800,11 +870,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         (ends == null || now.isBefore(ends));
   }
 
-  Future<void> _checkForUpdates() async {
+  Future<void> _checkForUpdates({bool quiet = false}) async {
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Checking for updates…')),
-    );
+    if (!quiet) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Checking for updates…')),
+      );
+    }
     try {
       final installed = await PackageInfo.fromPlatform();
       // A versioned URL prevents an old Azure/CDN response masking a new APK.
@@ -824,10 +896,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final current = int.tryParse(installed.buildNumber) ?? 0;
       if (!mounted) return;
       if (latest <= current) {
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          const SnackBar(content: Text('You have the latest version.')),
-        );
+        if (!quiet) {
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
+            const SnackBar(content: Text('You have the latest version.')),
+          );
+        }
         return;
       }
       await showDialog<void>(
@@ -855,10 +929,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     } catch (_) {
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('No published app update yet.')),
-      );
+      if (!quiet) {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          const SnackBar(content: Text('No published app update yet.')),
+        );
+      }
     }
   }
 
@@ -1535,6 +1611,7 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final online = status?['online'] == true;
+    final cached = status?['_cached'] == true;
     final memory = status?['memory'] as Map<String, dynamic>?;
     final usage = memory?['usedPercent'];
     return Card(
@@ -1554,7 +1631,11 @@ class _StatusCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    online ? 'Unraid is online' : 'Unraid status unavailable',
+                    online
+                        ? (cached
+                              ? 'Last known Unraid status'
+                              : 'Unraid is online')
+                        : 'Unraid status unavailable',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 3),
@@ -1563,6 +1644,11 @@ class _StatusCard extends StatelessWidget {
                         ? '${status?['hostname'] ?? 'Tower'} · ${status?['cpuCores'] ?? '?'} CPU cores${usage == null ? '' : ' · $usage% memory'}'
                         : 'Pull down to try again.',
                   ),
+                  if (cached && status?['_savedAt'] != null)
+                    Text(
+                      'Saved ${status?['_savedAt']}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                 ],
               ),
             ),
