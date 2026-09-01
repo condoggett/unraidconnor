@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'notification_screens.dart';
+import 'release3_screens.dart';
 import 'seerr_screen.dart';
 import 'service_hubs.dart';
 
@@ -492,6 +493,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 case 'home': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HomeAssistantHubScreen(status: _status))); break;
                 case 'unraid': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => UnraidDashboardScreen(status: _status, admin: _admin))); break;
                 case 'history': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationHistoryScreen())); break;
+                case 'activity': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FamilyActivityScreen())); break;
+                case 'immich': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ImmichHighlightsScreen())); break;
+                case 'diagnostics': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const DiagnosticsScreen())); break;
                 case 'notes': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ReleaseNotesScreen())); break;
                 case 'notifications': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())); break;
                 case 'personalise': _personalise(); break;
@@ -504,10 +508,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               PopupMenuItem(value: 'unraid', child: ListTile(leading: Icon(Icons.dns_outlined), title: Text('Unraid dashboard'))),
               PopupMenuDivider(),
               PopupMenuItem(value: 'history', child: ListTile(leading: Icon(Icons.notifications_outlined), title: Text('Notification history'))),
+              PopupMenuItem(value: 'activity', child: ListTile(leading: Icon(Icons.bolt_outlined), title: Text('Your activity'))),
+              PopupMenuItem(value: 'immich', child: ListTile(leading: Icon(Icons.photo_library_outlined), title: Text('Immich highlights'))),
               PopupMenuItem(value: 'notes', child: ListTile(leading: Icon(Icons.new_releases_outlined), title: Text('What’s new'))),
               PopupMenuItem(value: 'notifications', child: ListTile(leading: Icon(Icons.notifications_active_outlined), title: Text('Notification settings'))),
               PopupMenuItem(value: 'personalise', child: ListTile(leading: Icon(Icons.tune), title: Text('Personalise dashboard'))),
               PopupMenuItem(value: 'update', child: ListTile(leading: Icon(Icons.system_update_outlined), title: Text('Check for updates'))),
+              PopupMenuItem(value: 'diagnostics', child: ListTile(leading: Icon(Icons.monitor_heart_outlined), title: Text('Connection diagnostics'))),
               PopupMenuDivider(),
               PopupMenuItem(value: 'signout', child: ListTile(leading: Icon(Icons.logout), title: Text('Sign out'))),
             ],

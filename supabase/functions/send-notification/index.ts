@@ -55,7 +55,7 @@ Deno.serve(async (request) => {
   // request is an admin task, so it is deliberately routed only to admins.
   const service = String(data.service ?? '').toLowerCase();
   const event = String(data.event ?? data.notification_type ?? '').toLowerCase();
-  const requesterEmail = String(data.requester_email ?? data.requesterEmail ?? '').trim();
+  const requesterEmail = String(data.requester_email ?? data.requesterEmail ?? data.recipient_email ?? data.recipientEmail ?? '').trim();
   if (!user_id && category === 'app' && service === 'seerr') {
     const pending = event.includes('pending');
     if (pending) {
@@ -67,6 +67,9 @@ Deno.serve(async (request) => {
     } else if (!event.includes('test')) {
       return Response.json({ error: 'Seerr notifications require data.requester_email for personal delivery.' }, { status: 400 });
     }
+  } else if (!user_id && category === 'app' && requesterEmail) {
+    const { data: recipient } = await supabase.from('profiles').select('id').ilike('email', requesterEmail).maybeSingle();
+    users = recipient ? [recipient.id] : [];
   }
   const { data: preferences } = await supabase.from('notification_preferences').select('*').in('user_id', users);
   const preferencesByUser = new Map((preferences ?? []).map((row) => [row.user_id, row as Preference]));
