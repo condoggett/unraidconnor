@@ -102,11 +102,14 @@ jobs:
         env:
           NOTIFICATION_URL: ${{ secrets.NOTIFICATION_URL }}
           NOTIFICATION_SECRET: ${{ secrets.NOTIFICATION_SECRET }}
+          NOTIFICATION_AUTHORIZATION: ${{ secrets.NOTIFICATION_AUTHORIZATION }}
         run: |
           test -n "$NOTIFICATION_URL"
           test -n "$NOTIFICATION_SECRET"
+          test -n "$NOTIFICATION_AUTHORIZATION"
           curl --fail --silent --show-error --request POST "$NOTIFICATION_URL" \
             --header "content-type: application/json" \
+            --header "Authorization: $NOTIFICATION_AUTHORIZATION" \
             --header "x-notification-secret: $NOTIFICATION_SECRET" \
             --data '{"audience":"subscribed","category":"app_update","title":"Connor Homelab update ready","body":"Version ${{ steps.release.outputs.version }} is ready to install. Open Connor Homelab and tap Check for updates.","data":{"version":"${{ steps.release.outputs.version }}"}}'
 
