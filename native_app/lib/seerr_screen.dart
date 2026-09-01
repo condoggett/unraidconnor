@@ -78,6 +78,10 @@ class _HomelabWebAppScreenState extends State<HomelabWebAppScreen> {
             ),
             title: Text(widget.title),
             actions: [
+              // The normal Back button follows the service's own history. A
+              // login redirect can have several history entries, so always
+              // provide an explicit escape route back to the app dashboard.
+              IconButton(onPressed: () => Navigator.of(this.context).pop(), icon: const Icon(Icons.close), tooltip: 'Return to Homelab'),
               IconButton(onPressed: () => _controller.reload(), icon: const Icon(Icons.refresh), tooltip: 'Refresh'),
               IconButton(onPressed: _openOutside, icon: const Icon(Icons.open_in_browser), tooltip: 'Open in browser'),
             ],
