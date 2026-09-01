@@ -484,15 +484,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final allApps = visibleApps.where((app) => !favourites.contains(app) && !recent.contains(app)).toList();
     return Scaffold(
         appBar: AppBar(title: const Text('Connor Homelab'), actions: [
-          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HomeAssistantHubScreen(status: _status))), tooltip: 'Home Assistant hub', icon: const Icon(Icons.home_outlined)),
-          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => UnraidDashboardScreen(status: _status, admin: _admin))), tooltip: 'Unraid dashboard', icon: const Icon(Icons.dns_outlined)),
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NowAvailableScreen())), tooltip: 'Now available', icon: const Icon(Icons.movie_filter_outlined)),
-          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationHistoryScreen())), tooltip: 'Notification history', icon: const Icon(Icons.notifications_outlined)),
-          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ReleaseNotesScreen())), tooltip: 'What’s new', icon: const Icon(Icons.new_releases_outlined)),
-          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())), tooltip: 'Notification settings', icon: const Icon(Icons.notifications_active_outlined)),
-          IconButton(onPressed: _personalise, tooltip: 'Personalise dashboard', icon: const Icon(Icons.tune)),
-          IconButton(onPressed: _checkForUpdates, tooltip: 'Check for updates', icon: const Icon(Icons.system_update_outlined)),
-          IconButton(onPressed: () => _client.auth.signOut(), tooltip: 'Sign out', icon: const Icon(Icons.logout)),
+          PopupMenuButton<String>(
+            tooltip: 'More options',
+            onSelected: (choice) {
+              switch (choice) {
+                case 'home': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HomeAssistantHubScreen(status: _status))); break;
+                case 'unraid': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => UnraidDashboardScreen(status: _status, admin: _admin))); break;
+                case 'history': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationHistoryScreen())); break;
+                case 'notes': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ReleaseNotesScreen())); break;
+                case 'notifications': Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())); break;
+                case 'personalise': _personalise(); break;
+                case 'update': _checkForUpdates(); break;
+                case 'signout': _client.auth.signOut(); break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'home', child: ListTile(leading: Icon(Icons.home_outlined), title: Text('Home Assistant'))),
+              PopupMenuItem(value: 'unraid', child: ListTile(leading: Icon(Icons.dns_outlined), title: Text('Unraid dashboard'))),
+              PopupMenuDivider(),
+              PopupMenuItem(value: 'history', child: ListTile(leading: Icon(Icons.notifications_outlined), title: Text('Notification history'))),
+              PopupMenuItem(value: 'notes', child: ListTile(leading: Icon(Icons.new_releases_outlined), title: Text('What’s new'))),
+              PopupMenuItem(value: 'notifications', child: ListTile(leading: Icon(Icons.notifications_active_outlined), title: Text('Notification settings'))),
+              PopupMenuItem(value: 'personalise', child: ListTile(leading: Icon(Icons.tune), title: Text('Personalise dashboard'))),
+              PopupMenuItem(value: 'update', child: ListTile(leading: Icon(Icons.system_update_outlined), title: Text('Check for updates'))),
+              PopupMenuDivider(),
+              PopupMenuItem(value: 'signout', child: ListTile(leading: Icon(Icons.logout), title: Text('Sign out'))),
+            ],
+          ),
         ]),
         body: RefreshIndicator(
           onRefresh: _load,
