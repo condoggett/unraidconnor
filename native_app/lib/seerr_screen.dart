@@ -3,15 +3,16 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
-class SeerrScreen extends StatefulWidget {
-  const SeerrScreen({super.key, required this.url});
+class HomelabWebAppScreen extends StatefulWidget {
+  const HomelabWebAppScreen({super.key, required this.title, required this.url});
+  final String title;
   final String url;
 
   @override
-  State<SeerrScreen> createState() => _SeerrScreenState();
+  State<HomelabWebAppScreen> createState() => _HomelabWebAppScreenState();
 }
 
-class _SeerrScreenState extends State<SeerrScreen> {
+class _HomelabWebAppScreenState extends State<HomelabWebAppScreen> {
   late final WebViewController _controller;
   int _progress = 0;
 
@@ -50,7 +51,7 @@ class _SeerrScreenState extends State<SeerrScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: const Text('Seerr'),
+          title: Text(widget.title),
           actions: [
             IconButton(onPressed: () => _controller.reload(), icon: const Icon(Icons.refresh), tooltip: 'Refresh'),
             IconButton(onPressed: _openOutside, icon: const Icon(Icons.open_in_browser), tooltip: 'Open in browser'),

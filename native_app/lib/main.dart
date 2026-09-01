@@ -12,7 +12,6 @@ import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'notification_screens.dart';
 import 'seerr_screen.dart';
@@ -281,14 +280,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _openApp(Map<String, dynamic> app) async {
-    if (app['id'] == 'requests') {
-      await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SeerrScreen(url: app['url'] as String)));
-      return;
-    }
-    final opened = await launchUrl(Uri.parse(app['url'] as String), mode: LaunchMode.externalApplication);
-    if (opened) {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => HomelabWebAppScreen(
+        title: app['name'] as String,
+        url: app['url'] as String,
+      ),
+    ));
+    try {
       await _client.from('audit_events').insert({'user_id': _client.auth.currentUser!.id, 'event_type': 'app_opened', 'app_id': app['id']});
-    }
+    } catch (_) {}
   }
 
   Future<void> _personalise() async {
@@ -424,7 +424,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text('Your apps', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 10),
             if (_apps.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No apps have been assigned to this account yet. Ask an admin to grant access.'))),
-            ..._apps.where((app) => !_hidden.contains(app['id'])).map((app) => Card(child: ListTile(leading: CircleAvatar(child: Text((app['icon'] as String?)?.isNotEmpty == true ? app['icon'] as String : '•')), title: Text(app['name'] as String), subtitle: Text((app['description'] as String?) ?? ''), trailing: const Icon(Icons.open_in_new), onTap: () => _openApp(app)))),
+            ..._apps.where((app) => !_hidden.contains(app['id'])).map((app) => Card(child: ListTile(leading: CircleAvatar(child: Text((app['icon'] as String?)?.isNotEmpty == true ? app['icon'] as String : '•')), title: Text(app['name'] as String), subtitle: Text((app['description'] as String?) ?? ''), trailing: const Icon(Icons.arrow_forward_ios), onTap: () => _openApp(app)))),
             const SizedBox(height: 18),
             OutlinedButton.icon(onPressed: _checkForUpdates, icon: const Icon(Icons.system_update_outlined), label: const Text('Check for app updates')),
             const SizedBox(height: 10),
