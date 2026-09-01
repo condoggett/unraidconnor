@@ -117,6 +117,72 @@ class NotificationHistoryScreen extends StatefulWidget {
   State<NotificationHistoryScreen> createState() => _NotificationHistoryScreenState();
 }
 
+class NowAvailableScreen extends StatefulWidget {
+  const NowAvailableScreen({super.key});
+
+  @override
+  State<NowAvailableScreen> createState() => _NowAvailableScreenState();
+}
+
+class _NowAvailableScreenState extends State<NowAvailableScreen> {
+  final _client = Supabase.instance.client;
+  bool _loading = true;
+  List<Map<String, dynamic>> _items = [];
+
+  @override
+  void initState() { super.initState(); _load(); }
+
+  Future<void> _load() async {
+    try {
+      final rows = await _client.from('notifications').select('title, body, created_at, data').eq('category', 'app').order('created_at', ascending: false).limit(100);
+      final items = (rows as List).cast<Map<String, dynamic>>().where((item) {
+        final text = '${item['title']} ${item['body']} ${item['data']}';
+        return text.toLowerCase().contains('available');
+      }).toList();
+      if (mounted) setState(() => _items = items);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Now available')),
+        body: _loading ? const Center(child: CircularProgressIndicator()) : _items.isEmpty
+            ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Nothing has been marked available yet. When Seerr sends an availability notification, it will appear here.')))
+            : ListView.separated(padding: const EdgeInsets.all(16), itemCount: _items.length, separatorBuilder: (_, _) => const SizedBox(height: 8), itemBuilder: (_, index) {
+                final item = _items[index];
+                return Card(child: ListTile(leading: const CircleAvatar(child: Icon(Icons.movie_outlined)), title: Text('${item['title']}'), subtitle: Text('${item['body'] ?? ''}'), trailing: const Icon(Icons.check_circle_outline)));
+              }),
+      );
+}
+
+class ReleaseNotesScreen extends StatelessWidget {
+  const ReleaseNotesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('What’s new')),
+        body: ListView(padding: const EdgeInsets.all(18), children: const [
+          _ReleaseNote(version: '2.5.0', changes: ['Personal dashboard with pinned services and recently used apps.', 'Improved family-friendly dashboard layout.']),
+          _ReleaseNote(version: '2.4.9', changes: ['Back navigation stays inside Home Assistant, Seerr, Immich and other services.', 'Reliable update checks and native update notifications.', 'Seerr webhook notifications supported.']),
+        ]),
+      );
+}
+
+class _ReleaseNote extends StatelessWidget {
+  const _ReleaseNote({required this.version, required this.changes});
+  final String version;
+  final List<String> changes;
+
+  @override
+  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(version, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        ...changes.map((change) => Padding(padding: const EdgeInsets.only(bottom: 6), child: Text('• $change'))),
+      ])));
+}
+
 class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
   final _client = Supabase.instance.client;
   bool _loading = true;

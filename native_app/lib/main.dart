@@ -439,7 +439,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final allApps = visibleApps.where((app) => !favourites.contains(app) && !recent.contains(app)).toList();
     return Scaffold(
         appBar: AppBar(title: const Text('Connor Homelab'), actions: [
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NowAvailableScreen())), tooltip: 'Now available', icon: const Icon(Icons.movie_filter_outlined)),
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationHistoryScreen())), tooltip: 'Notification history', icon: const Icon(Icons.notifications_outlined)),
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ReleaseNotesScreen())), tooltip: 'What’s new', icon: const Icon(Icons.new_releases_outlined)),
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())), tooltip: 'Notification settings', icon: const Icon(Icons.notifications_active_outlined)),
           IconButton(onPressed: _personalise, tooltip: 'Personalise dashboard', icon: const Icon(Icons.tune)),
           IconButton(onPressed: _checkForUpdates, tooltip: 'Check for updates', icon: const Icon(Icons.system_update_outlined)),
