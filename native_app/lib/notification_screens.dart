@@ -5,10 +5,12 @@ class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  State<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
   final _client = Supabase.instance.client;
   bool _loading = true;
   bool _saving = false;
@@ -29,14 +31,22 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   TimeOfDay _time(String? value, TimeOfDay fallback) {
     final parts = value?.split(':');
     if (parts == null || parts.length < 2) return fallback;
-    return TimeOfDay(hour: int.tryParse(parts[0]) ?? fallback.hour, minute: int.tryParse(parts[1]) ?? fallback.minute);
+    return TimeOfDay(
+      hour: int.tryParse(parts[0]) ?? fallback.hour,
+      minute: int.tryParse(parts[1]) ?? fallback.minute,
+    );
   }
 
-  String _format(TimeOfDay value) => '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}:00';
+  String _format(TimeOfDay value) =>
+      '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}:00';
 
   Future<void> _load() async {
     try {
-      final row = await _client.from('notification_preferences').select().eq('user_id', _client.auth.currentUser!.id).maybeSingle();
+      final row = await _client
+          .from('notification_preferences')
+          .select()
+          .eq('user_id', _client.auth.currentUser!.id)
+          .maybeSingle();
       if (row != null && mounted) {
         setState(() {
           _unraid = row['unraid_health'] as bool? ?? true;
@@ -56,8 +66,18 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   }
 
   Future<void> _pickTime(bool start) async {
-    final value = await showTimePicker(context: context, initialTime: start ? _quietStart : _quietEnd);
-    if (value != null && mounted) setState(() { if (start) { _quietStart = value; } else { _quietEnd = value; } });
+    final value = await showTimePicker(
+      context: context,
+      initialTime: start ? _quietStart : _quietEnd,
+    );
+    if (value != null && mounted)
+      setState(() {
+        if (start) {
+          _quietStart = value;
+        } else {
+          _quietEnd = value;
+        }
+      });
   }
 
   Future<void> _save() async {
@@ -76,11 +96,16 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification preferences saved.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notification preferences saved.')),
+        );
         Navigator.pop(context);
       }
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not save preferences: $error')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save preferences: $error')),
+        );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -88,33 +113,92 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Notification settings')),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(padding: const EdgeInsets.all(18), children: [
-                Text('Choose what reaches this phone.', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 10),
-                SwitchListTile.adaptive(value: _unraid, onChanged: (value) => setState(() => _unraid = value), title: const Text('Unraid health'), subtitle: const Text('Server recovery, stopped containers and high resource use.')),
-                SwitchListTile.adaptive(value: _homeAssistant, onChanged: (value) => setState(() => _homeAssistant = value), title: const Text('Home Assistant'), subtitle: const Text('The home alerts you choose to send from Home Assistant.')),
-                SwitchListTile.adaptive(value: _appServices, onChanged: (value) => setState(() => _appServices = value), title: const Text('Homelab app services'), subtitle: const Text('Alerts sent by services such as Seerr, media tools, and future connected apps.')),
-                SwitchListTile.adaptive(value: _appUpdates, onChanged: (value) => setState(() => _appUpdates = value), title: const Text('App updates'), subtitle: const Text('Let me know when a new Connor Homelab app version is published.')),
-                const Divider(height: 30),
-                SwitchListTile.adaptive(value: _quietHours, onChanged: (value) => setState(() => _quietHours = value), title: const Text('Quiet hours'), subtitle: const Text('Non-critical alerts wait until your quiet hours end.')),
-                if (_quietHours) Card(child: Column(children: [
-                  ListTile(title: const Text('Quiet hours start'), trailing: Text(_quietStart.format(context)), onTap: () => _pickTime(true)),
-                  ListTile(title: const Text('Quiet hours end'), trailing: Text(_quietEnd.format(context)), onTap: () => _pickTime(false)),
-                ])),
-                const SizedBox(height: 24),
-                FilledButton.icon(onPressed: _saving ? null : _save, icon: const Icon(Icons.save), label: Text(_saving ? 'Saving…' : 'Save preferences')),
-              ]),
-      );
+    appBar: AppBar(title: const Text('Notification settings')),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              Text(
+                'Choose what reaches this phone.',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 10),
+              SwitchListTile.adaptive(
+                value: _unraid,
+                onChanged: (value) => setState(() => _unraid = value),
+                title: const Text('Unraid health'),
+                subtitle: const Text(
+                  'Server recovery, stopped containers and high resource use.',
+                ),
+              ),
+              SwitchListTile.adaptive(
+                value: _homeAssistant,
+                onChanged: (value) => setState(() => _homeAssistant = value),
+                title: const Text('Home Assistant'),
+                subtitle: const Text(
+                  'The home alerts you choose to send from Home Assistant.',
+                ),
+              ),
+              SwitchListTile.adaptive(
+                value: _appServices,
+                onChanged: (value) => setState(() => _appServices = value),
+                title: const Text('Homelab app services'),
+                subtitle: const Text(
+                  'Alerts sent by services such as Seerr, media tools, and future connected apps.',
+                ),
+              ),
+              SwitchListTile.adaptive(
+                value: _appUpdates,
+                onChanged: (value) => setState(() => _appUpdates = value),
+                title: const Text('App updates'),
+                subtitle: const Text(
+                  'Let me know when a new Connor Homelab app version is published.',
+                ),
+              ),
+              const Divider(height: 30),
+              SwitchListTile.adaptive(
+                value: _quietHours,
+                onChanged: (value) => setState(() => _quietHours = value),
+                title: const Text('Quiet hours'),
+                subtitle: const Text(
+                  'Non-critical alerts wait until your quiet hours end.',
+                ),
+              ),
+              if (_quietHours)
+                Card(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        title: const Text('Quiet hours start'),
+                        trailing: Text(_quietStart.format(context)),
+                        onTap: () => _pickTime(true),
+                      ),
+                      ListTile(
+                        title: const Text('Quiet hours end'),
+                        trailing: Text(_quietEnd.format(context)),
+                        onTap: () => _pickTime(false),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.save),
+                label: Text(_saving ? 'Saving…' : 'Save preferences'),
+              ),
+            ],
+          ),
+  );
 }
 
 class NotificationHistoryScreen extends StatefulWidget {
   const NotificationHistoryScreen({super.key});
 
   @override
-  State<NotificationHistoryScreen> createState() => _NotificationHistoryScreenState();
+  State<NotificationHistoryScreen> createState() =>
+      _NotificationHistoryScreenState();
 }
 
 class NowAvailableScreen extends StatefulWidget {
@@ -130,11 +214,19 @@ class _NowAvailableScreenState extends State<NowAvailableScreen> {
   List<Map<String, dynamic>> _items = [];
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   Future<void> _load() async {
     try {
-      final rows = await _client.from('notifications').select('title, body, created_at, data').eq('category', 'app').order('created_at', ascending: false).limit(100);
+      final rows = await _client
+          .from('notifications')
+          .select('title, body, created_at, data')
+          .eq('category', 'app')
+          .order('created_at', ascending: false)
+          .limit(100);
       final items = (rows as List).cast<Map<String, dynamic>>().where((item) {
         final text = '${item['title']} ${item['body']} ${item['data']}';
         return text.toLowerCase().contains('available');
@@ -147,14 +239,37 @@ class _NowAvailableScreenState extends State<NowAvailableScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Now available')),
-        body: _loading ? const Center(child: CircularProgressIndicator()) : _items.isEmpty
-            ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Nothing has been marked available yet. When Seerr sends an availability notification, it will appear here.')))
-            : ListView.separated(padding: const EdgeInsets.all(16), itemCount: _items.length, separatorBuilder: (_, _) => const SizedBox(height: 8), itemBuilder: (_, index) {
-                final item = _items[index];
-                return Card(child: ListTile(leading: const CircleAvatar(child: Icon(Icons.movie_outlined)), title: Text('${item['title']}'), subtitle: Text('${item['body'] ?? ''}'), trailing: const Icon(Icons.check_circle_outline)));
-              }),
-      );
+    appBar: AppBar(title: const Text('Now available')),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : _items.isEmpty
+        ? const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Nothing has been marked available yet. When Seerr sends an availability notification, it will appear here.',
+              ),
+            ),
+          )
+        : ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: _items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (_, index) {
+              final item = _items[index];
+              return Card(
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    child: Icon(Icons.movie_outlined),
+                  ),
+                  title: Text('${item['title']}'),
+                  subtitle: Text('${item['body'] ?? ''}'),
+                  trailing: const Icon(Icons.check_circle_outline),
+                ),
+              );
+            },
+          ),
+  );
 }
 
 class ReleaseNotesScreen extends StatelessWidget {
@@ -162,14 +277,53 @@ class ReleaseNotesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('What’s new')),
-        body: ListView(padding: const EdgeInsets.all(18), children: const [
-          _ReleaseNote(version: '2.7.1', changes: ['Choose a personal Ocean, Forest, Violet or Sunset dashboard theme.', 'Choose a standard, compact or media-first home layout.', 'Optional biometric / phone-PIN app lock when returning to the app.', 'Maintenance notices and clearer connection diagnostics.']),
-          _ReleaseNote(version: '2.7.0', changes: ['Personal Immich highlight and activity views.', 'Foundations for family-aware notifications and service identities.']),
-          _ReleaseNote(version: '2.5.0', changes: ['Personal dashboard with pinned services and recently used apps.', 'Improved family-friendly dashboard layout.']),
-          _ReleaseNote(version: '2.4.9', changes: ['Back navigation stays inside Home Assistant, Seerr, Immich and other services.', 'Reliable update checks and native update notifications.', 'Seerr webhook notifications supported.']),
-        ]),
-      );
+    appBar: AppBar(title: const Text('What’s new')),
+    body: ListView(
+      padding: const EdgeInsets.all(18),
+      children: const [
+        _ReleaseNote(
+          version: '3.0.0',
+          changes: [
+            'Your profile: personal name, icon, theme, dashboard layout and phone-lock choice.',
+            'Maintenance centre for planned homelab work, with admin-only notice publishing.',
+            'Latest-for-you activity on the home screen alongside your private services.',
+            'V3 settings are protected by Supabase row-level security.',
+          ],
+        ),
+        _ReleaseNote(
+          version: '2.7.1',
+          changes: [
+            'Choose a personal Ocean, Forest, Violet or Sunset dashboard theme.',
+            'Choose a standard, compact or media-first home layout.',
+            'Optional biometric / phone-PIN app lock when returning to the app.',
+            'Maintenance notices and clearer connection diagnostics.',
+          ],
+        ),
+        _ReleaseNote(
+          version: '2.7.0',
+          changes: [
+            'Personal Immich highlight and activity views.',
+            'Foundations for family-aware notifications and service identities.',
+          ],
+        ),
+        _ReleaseNote(
+          version: '2.5.0',
+          changes: [
+            'Personal dashboard with pinned services and recently used apps.',
+            'Improved family-friendly dashboard layout.',
+          ],
+        ),
+        _ReleaseNote(
+          version: '2.4.9',
+          changes: [
+            'Back navigation stays inside Home Assistant, Seerr, Immich and other services.',
+            'Reliable update checks and native update notifications.',
+            'Seerr webhook notifications supported.',
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 class _ReleaseNote extends StatelessWidget {
@@ -178,11 +332,24 @@ class _ReleaseNote extends StatelessWidget {
   final List<String> changes;
 
   @override
-  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(version, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        ...changes.map((change) => Padding(padding: const EdgeInsets.only(bottom: 6), child: Text('• $change'))),
-      ])));
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(version, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          ...changes.map(
+            (change) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text('• $change'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
@@ -198,22 +365,30 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
 
   Future<void> _load() async {
     try {
-      final rows = await _client.from('notifications').select('id, title, body, category, created_at, read_at').order('created_at', ascending: false).limit(100);
-      if (mounted) setState(() => _items = (rows as List).cast<Map<String, dynamic>>());
+      final rows = await _client
+          .from('notifications')
+          .select('id, title, body, category, created_at, read_at')
+          .order('created_at', ascending: false)
+          .limit(100);
+      if (mounted)
+        setState(() => _items = (rows as List).cast<Map<String, dynamic>>());
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not load notifications: $error')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load notifications: $error')),
+        );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   IconData _icon(String category) => switch (category) {
-        'unraid' => Icons.dns_outlined,
-        'home_assistant' => Icons.home_outlined,
-        'app_update' => Icons.system_update_outlined,
-        'app' => Icons.apps_outlined,
-        _ => Icons.notifications_outlined,
-      };
+    'unraid' => Icons.dns_outlined,
+    'home_assistant' => Icons.home_outlined,
+    'app_update' => Icons.system_update_outlined,
+    'app' => Icons.apps_outlined,
+    _ => Icons.notifications_outlined,
+  };
 
   String _date(String? value) {
     final date = DateTime.tryParse(value ?? '')?.toLocal();
@@ -223,35 +398,53 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
 
   Future<void> _markRead(Map<String, dynamic> item) async {
     if (item['read_at'] != null) return;
-    await _client.from('notifications').update({'read_at': DateTime.now().toUtc().toIso8601String()}).eq('id', item['id']);
-    if (mounted) setState(() => item['read_at'] = DateTime.now().toIso8601String());
+    await _client
+        .from('notifications')
+        .update({'read_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('id', item['id']);
+    if (mounted)
+      setState(() => item['read_at'] = DateTime.now().toIso8601String());
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Notification history')),
-        body: RefreshIndicator(
-          onRefresh: _load,
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _items.isEmpty
-                  ? ListView(children: const [SizedBox(height: 180), Center(child: Text('No notifications yet.'))])
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(12),
-                      itemCount: _items.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (_, index) {
-                        final item = _items[index];
-                        final unread = item['read_at'] == null;
-                        return ListTile(
-                          leading: CircleAvatar(child: Icon(_icon('${item['category']}'))),
-                          title: Text('${item['title']}', style: unread ? const TextStyle(fontWeight: FontWeight.bold) : null),
-                          subtitle: Text('${item['body'] ?? ''}\n${_date(item['created_at'] as String?)}'),
-                          isThreeLine: true,
-                          onTap: () => _markRead(item),
-                        );
-                      },
-                    ),
-        ),
-      );
+    appBar: AppBar(title: const Text('Notification history')),
+    body: RefreshIndicator(
+      onRefresh: _load,
+      child: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _items.isEmpty
+          ? ListView(
+              children: const [
+                SizedBox(height: 180),
+                Center(child: Text('No notifications yet.')),
+              ],
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(12),
+              itemCount: _items.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (_, index) {
+                final item = _items[index];
+                final unread = item['read_at'] == null;
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Icon(_icon('${item['category']}')),
+                  ),
+                  title: Text(
+                    '${item['title']}',
+                    style: unread
+                        ? const TextStyle(fontWeight: FontWeight.bold)
+                        : null,
+                  ),
+                  subtitle: Text(
+                    '${item['body'] ?? ''}\n${_date(item['created_at'] as String?)}',
+                  ),
+                  isThreeLine: true,
+                  onTap: () => _markRead(item),
+                );
+              },
+            ),
+    ),
+  );
 }

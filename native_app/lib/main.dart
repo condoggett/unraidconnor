@@ -1154,17 +1154,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 20),
                         Row(
                           children: [
-                            Expanded(child: _SectionHeading(title: 'Latest for you', subtitle: 'Recent homelab activity')),
-                            TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FamilyActivityScreen())), child: const Text('See all')),
+                            Expanded(
+                              child: _SectionHeading(
+                                title: 'Latest for you',
+                                subtitle: 'Recent homelab activity',
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => const FamilyActivityScreen(),
+                                ),
+                              ),
+                              child: const Text('See all'),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        ..._activity.map((event) => Card(child: ListTile(
-                          dense: true,
-                          leading: Icon(_activityIcon('${event['category'] ?? ''}')),
-                          title: Text('${event['title'] ?? 'Homelab activity'}', maxLines: 1, overflow: TextOverflow.ellipsis),
-                          subtitle: Text('${event['body'] ?? ''}', maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ))),
+                        ..._activity.map(
+                          (event) => Card(
+                            child: ListTile(
+                              dense: true,
+                              leading: Icon(
+                                _activityIcon('${event['category'] ?? ''}'),
+                              ),
+                              title: Text(
+                                '${event['title'] ?? 'Homelab activity'}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                '${event['body'] ?? ''}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                       if (_error != null)
                         Padding(
