@@ -286,6 +286,14 @@ class ReleaseNotesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: const [
         _ReleaseNote(
+          version: '3.5.0',
+          changes: [
+            'A more personal family dashboard: choose Classic, Compact or Glass cards, alongside your theme, layout and pinned services.',
+            'Improved everyday app experience with recent services, clearer offline/maintenance information, service shortcuts and automatic verified updates.',
+            'A new publishing and diagnosis guide makes future Android updates easier to build, release and troubleshoot safely.',
+          ],
+        ),
+        _ReleaseNote(
           version: '3.4.1',
           changes: [
             'Technical and family guides are now maintained in the project, alongside clearer source-file comments.',

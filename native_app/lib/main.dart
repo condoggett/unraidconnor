@@ -403,6 +403,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<String> _recentAppIds = [];
   String _theme = 'ocean';
   String _layout = 'standard';
+  String _cardStyle = 'classic';
   String _avatar = 'auto';
   bool _appLockEnabled = false;
   Map<String, dynamic>? _maintenance;
@@ -434,6 +435,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
     try {
       final user = _client.auth.currentUser!;
+      final localPreferences = await SharedPreferences.getInstance();
+      final cardStyle =
+          localPreferences.getString('card_style_${user.id}') ?? 'classic';
       await _registerForNotifications(user.id);
       final profile = await _client
           .from('profiles')
@@ -555,6 +559,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _recentAppIds = recentAppIds;
         _theme = '${dashboardSettings?['theme'] ?? 'ocean'}';
         _layout = '${dashboardSettings?['dashboard_layout'] ?? 'standard'}';
+        _cardStyle = cardStyle;
         _avatar = '${dashboardSettings?['avatar_icon'] ?? 'auto'}';
         _appLockEnabled = dashboardSettings?['app_lock_enabled'] == true;
         _maintenance = maintenance;
@@ -681,6 +686,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final messenger = ScaffoldMessenger.of(context);
     var theme = _theme;
     var layout = _layout;
+    var cardStyle = _cardStyle;
     var appLock = _appLockEnabled;
     await showDialog<void>(
       context: context,
@@ -727,6 +733,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                     onChanged: (value) =>
                         setDialogState(() => layout = value ?? layout),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: cardStyle,
+                    decoration: const InputDecoration(labelText: 'Card style'),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'classic',
+                        child: Text('Classic'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'compact_cards',
+                        child: Text('Compact'),
+                      ),
+                      DropdownMenuItem(value: 'glass', child: Text('Glass')),
+                    ],
+                    onChanged: (value) =>
+                        setDialogState(() => cardStyle = value ?? cardStyle),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
@@ -795,6 +819,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'hidden_app_ids': hidden.toList(),
                   'updated_at': DateTime.now().toUtc().toIso8601String(),
                 });
+                final localPreferences = await SharedPreferences.getInstance();
+                await localPreferences.setString(
+                  'card_style_${_client.auth.currentUser!.id}',
+                  cardStyle,
+                );
                 try {
                   await _client.from('user_dashboard_settings').upsert({
                     'user_id': _client.auth.currentUser!.id,
@@ -1397,6 +1426,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 const SizedBox(width: 10),
                             itemBuilder: (_, index) => _QuickAppTile(
                               app: favourites[index],
+                              style: _cardStyle,
                               onTap: () => _openApp(favourites[index]),
                             ),
                           ),
@@ -1418,6 +1448,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 const SizedBox(width: 10),
                             itemBuilder: (_, index) => _QuickAppTile(
                               app: recent[index],
+                              style: _cardStyle,
                               onTap: () => _openApp(recent[index]),
                             ),
                           ),
@@ -1443,6 +1474,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ...allApps.map(
                         (app) => Card(
+                          color: _cardStyle == 'glass'
+                              ? Theme.of(context).colorScheme.surface
+                                    .withValues(alpha: 0.62)
+                              : null,
+                          elevation: _cardStyle == 'compact_cards' ? 0 : null,
+                          margin: _cardStyle == 'compact_cards'
+                              ? const EdgeInsets.symmetric(vertical: 3)
+                              : null,
                           child: ListTile(
                             leading: CircleAvatar(
                               child: Text(
@@ -1570,8 +1609,13 @@ class _SectionHeading extends StatelessWidget {
 }
 
 class _QuickAppTile extends StatelessWidget {
-  const _QuickAppTile({required this.app, required this.onTap});
+  const _QuickAppTile({
+    required this.app,
+    required this.style,
+    required this.onTap,
+  });
   final Map<String, dynamic> app;
+  final String style;
   final VoidCallback onTap;
 
   @override
@@ -1580,6 +1624,10 @@ class _QuickAppTile extends StatelessWidget {
     return SizedBox(
       width: 152,
       child: Card(
+        color: style == 'glass'
+            ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.62)
+            : null,
+        elevation: style == 'compact_cards' ? 0 : null,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,

@@ -227,3 +227,5 @@ operational process changes. Add a short release-note entry to the app at the
 same time. V3.4.1 is the baseline documentation/comment release; future work
 should extend it instead of starting another unlinked guide.
 
+For the click-by-click APK workflow and failure table, see
+[`PUBLISH_AND_DIAGNOSE_ANDROID_RELEASES.md`](PUBLISH_AND_DIAGNOSE_ANDROID_RELEASES.md).
