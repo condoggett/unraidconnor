@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+// Local app-return lock using Android/iOS device authentication. No biometric
+// material is read by, transmitted to, or stored in Connor Homelab.
 import 'package:local_auth/local_auth.dart';
 
 /// Adds an optional biometric gate when the app returns to the foreground.

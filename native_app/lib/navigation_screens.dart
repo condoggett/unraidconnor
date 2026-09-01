@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+// Discoverability screens: the searchable per-user service catalogue and the
+// short welcome guide. Access filtering remains in DashboardScreen.
+
 class ServiceCatalogueScreen extends StatefulWidget {
   const ServiceCatalogueScreen({
     super.key,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+// Native summaries for Home Assistant and Unraid. These are intentionally
+// read-only convenience hubs; administrative actions must stay protected.
+
 import 'seerr_screen.dart';
 
 class HomeAssistantHubScreen extends StatelessWidget {

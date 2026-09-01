@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android shortcuts require resources so labels can be safely localised. -->
+    <string name="shortcut_home_assistant">Home Assistant</string>
+    <string name="shortcut_seerr">Seerr</string>
+    <string name="shortcut_immich">Immich</string>
+    <string name="shortcut_unraid">Unraid</string>
+</resources>

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+// Reusable in-app web-service shell. It preserves normal service cookies and
+// makes Back navigation remain within Connor Homelab.
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';

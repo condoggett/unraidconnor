@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+
+// Personalisation, maintenance scheduling, diagnostics and private activity
+// screens introduced in V3. Database writes in this file rely on Supabase RLS.
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

@@ -2,6 +2,11 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 
+// Application coordinator: startup, family dashboard, secure update checks,
+// notification/deep-link routing and the protected Unraid status cache.
+// Service-specific screens live in the neighbouring lib files documented in
+// docs/TECHNICAL_REFERENCE.md rather than being implemented here.
+
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:app_links/app_links.dart';

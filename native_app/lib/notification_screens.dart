@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+// Family-facing notification history, media availability and release notes.
+// Keep notification routing itself in main.dart so taps work before a screen is
+// open; this file only renders the destination views.
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
@@ -281,6 +285,13 @@ class ReleaseNotesScreen extends StatelessWidget {
     body: ListView(
       padding: const EdgeInsets.all(18),
       children: const [
+        _ReleaseNote(
+          version: '3.4.1',
+          changes: [
+            'Technical and family guides are now maintained in the project, alongside clearer source-file comments.',
+            'Android home-screen service shortcuts were packaged correctly for current Android versions.',
+          ],
+        ),
         _ReleaseNote(
           version: '3.4.0',
           changes: [

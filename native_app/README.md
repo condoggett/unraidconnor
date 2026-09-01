@@ -1,5 +1,10 @@
 # Connor Homelab mobile app
 
+Start with the [family user guide](../docs/USER_GUIDE.md) for everyday use and
+the [technical reference](../docs/TECHNICAL_REFERENCE.md) for the complete
+architecture, security, update and troubleshooting reference. This file is the
+Android Studio-focused companion guide.
+
 The native Flutter app for Android and iPhone. It signs in with the existing
 Supabase account, displays only the services assigned to the signed-in person,
 shows Unraid availability, and opens protected Homelab services.
@@ -101,7 +106,10 @@ The same workflow asks the Azure Static Web Apps workflow to deploy the new
 update notification, avoiding the old situation where a notification arrived
 before the update was actually available.
 
-On the phone, open **Connor Homelab** and choose **Check for updates**. The
+app verifies that the downloaded APK is from the Connor Homelab GitHub release
+and matches the published SHA-256 hash before Android shows the install prompt.
+From V3.4 onward, the same safe check happens quietly when the dashboard opens:
+it only shows a dialog when a newer verified release exists.
 app verifies that the downloaded APK is from the Connor Homelab GitHub release
 and matches the published SHA-256 hash before Android shows the install prompt.
 
