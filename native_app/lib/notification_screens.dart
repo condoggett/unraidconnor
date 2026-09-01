@@ -14,6 +14,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   bool _saving = false;
   bool _unraid = true;
   bool _homeAssistant = true;
+  bool _appServices = true;
   bool _appUpdates = true;
   bool _quietHours = false;
   TimeOfDay _quietStart = const TimeOfDay(hour: 22, minute: 0);
@@ -40,6 +41,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         setState(() {
           _unraid = row['unraid_health'] as bool? ?? true;
           _homeAssistant = row['home_assistant'] as bool? ?? true;
+          _appServices = row['app_services'] as bool? ?? true;
           _appUpdates = row['app_updates'] as bool? ?? true;
           _quietHours = row['quiet_hours_enabled'] as bool? ?? false;
           _quietStart = _time(row['quiet_start'] as String?, _quietStart);
@@ -65,6 +67,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         'user_id': _client.auth.currentUser!.id,
         'unraid_health': _unraid,
         'home_assistant': _homeAssistant,
+        'app_services': _appServices,
         'app_updates': _appUpdates,
         'quiet_hours_enabled': _quietHours,
         'quiet_start': _format(_quietStart),
@@ -93,6 +96,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 const SizedBox(height: 10),
                 SwitchListTile.adaptive(value: _unraid, onChanged: (value) => setState(() => _unraid = value), title: const Text('Unraid health'), subtitle: const Text('Server recovery, stopped containers and high resource use.')),
                 SwitchListTile.adaptive(value: _homeAssistant, onChanged: (value) => setState(() => _homeAssistant = value), title: const Text('Home Assistant'), subtitle: const Text('The home alerts you choose to send from Home Assistant.')),
+                SwitchListTile.adaptive(value: _appServices, onChanged: (value) => setState(() => _appServices = value), title: const Text('Homelab app services'), subtitle: const Text('Alerts sent by services such as Seerr, media tools, and future connected apps.')),
                 SwitchListTile.adaptive(value: _appUpdates, onChanged: (value) => setState(() => _appUpdates = value), title: const Text('App updates'), subtitle: const Text('Let me know when a new Connor Homelab app version is published.')),
                 const Divider(height: 30),
                 SwitchListTile.adaptive(value: _quietHours, onChanged: (value) => setState(() => _quietHours = value), title: const Text('Quiet hours'), subtitle: const Text('Non-critical alerts wait until your quiet hours end.')),
@@ -139,6 +143,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
         'unraid' => Icons.dns_outlined,
         'home_assistant' => Icons.home_outlined,
         'app_update' => Icons.system_update_outlined,
+        'app' => Icons.apps_outlined,
         _ => Icons.notifications_outlined,
       };
 

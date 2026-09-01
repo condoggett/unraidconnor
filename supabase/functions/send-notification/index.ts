@@ -7,6 +7,7 @@ type Preference = {
   unraid_health?: boolean;
   home_assistant?: boolean;
   app_updates?: boolean;
+  app_services?: boolean;
   quiet_hours_enabled?: boolean;
   quiet_start?: string;
   quiet_end?: string;
@@ -17,6 +18,7 @@ const categoryColumn: Record<string, keyof Preference | undefined> = {
   unraid: 'unraid_health',
   home_assistant: 'home_assistant',
   app_update: 'app_updates',
+  app: 'app_services',
 };
 
 function isQuiet(preference: Preference, priority: string): boolean {
@@ -39,7 +41,7 @@ Deno.serve(async (request) => {
   }
   const payload = await request.json().catch(() => ({}));
   const { user_id, audience, category = 'test', title, body, data = {}, priority = 'normal' } = payload;
-  if ((!user_id && audience !== 'subscribed') || !title || !body || !['unraid', 'home_assistant', 'app_update', 'test'].includes(category)) {
+  if ((!user_id && audience !== 'subscribed') || !title || !body || !['unraid', 'home_assistant', 'app_update', 'app', 'test'].includes(category)) {
     return Response.json({ error: 'user_id or audience=subscribed, valid category, title and body are required' }, { status: 400 });
   }
 
