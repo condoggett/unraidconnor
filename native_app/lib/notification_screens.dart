@@ -164,6 +164,8 @@ class ReleaseNotesScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('What’s new')),
         body: ListView(padding: const EdgeInsets.all(18), children: const [
+          _ReleaseNote(version: '2.7.1', changes: ['Choose a personal Ocean, Forest, Violet or Sunset dashboard theme.', 'Choose a standard, compact or media-first home layout.', 'Optional biometric / phone-PIN app lock when returning to the app.', 'Maintenance notices and clearer connection diagnostics.']),
+          _ReleaseNote(version: '2.7.0', changes: ['Personal Immich highlight and activity views.', 'Foundations for family-aware notifications and service identities.']),
           _ReleaseNote(version: '2.5.0', changes: ['Personal dashboard with pinned services and recently used apps.', 'Improved family-friendly dashboard layout.']),
           _ReleaseNote(version: '2.4.9', changes: ['Back navigation stays inside Home Assistant, Seerr, Immich and other services.', 'Reliable update checks and native update notifications.', 'Seerr webhook notifications supported.']),
         ]),
