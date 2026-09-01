@@ -994,8 +994,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       break;
                     case 'profile':
                       Navigator.of(context)
-                          .push(
-                            MaterialPageRoute<void>(
+                          .push<bool>(
+                            MaterialPageRoute<bool>(
                               builder: (_) => const ProfileScreen(),
                             ),
                           )

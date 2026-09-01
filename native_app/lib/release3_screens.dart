@@ -40,12 +40,22 @@ class _MaintenanceCenterScreenState extends State<MaintenanceCenterScreen> {
       _error = null;
     });
     try {
-      var query = _client
-          .from('maintenance_notices')
-          .select('id, active, title, message, starts_at, ends_at, created_at')
-          .order('created_at', ascending: false);
-      if (!widget.admin) query = query.eq('active', true);
-      final rows = await query.limit(30);
+      final rows = widget.admin
+          ? await _client
+                .from('maintenance_notices')
+                .select(
+                  'id, active, title, message, starts_at, ends_at, created_at',
+                )
+                .order('created_at', ascending: false)
+                .limit(30)
+          : await _client
+                .from('maintenance_notices')
+                .select(
+                  'id, active, title, message, starts_at, ends_at, created_at',
+                )
+                .eq('active', true)
+                .order('created_at', ascending: false)
+                .limit(30);
       _items = (rows as List).cast<Map<String, dynamic>>();
     } catch (_) {
       _error = 'Maintenance centre will be available after the V3 Supabase migration is applied.';
