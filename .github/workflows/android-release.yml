@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   build-and-publish:
@@ -91,6 +92,23 @@ jobs:
         run: |
           gh release view "${{ steps.release.outputs.tag }}" >/dev/null 2>&1 || gh release create "${{ steps.release.outputs.tag }}" --title "Connor Homelab ${{ steps.release.outputs.tag }}" --notes "Android release built by GitHub Actions."
           gh release upload "${{ steps.release.outputs.tag }}" "${{ steps.release.outputs.apk }}" --clobber
+
+      - name: Deploy the update manifest to Connor Homelab
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run "Azure Static Web Apps CI/CD" --ref main
+
+      - name: Notify family about the app update
+        env:
+          NOTIFICATION_URL: ${{ secrets.NOTIFICATION_URL }}
+          NOTIFICATION_SECRET: ${{ secrets.NOTIFICATION_SECRET }}
+        run: |
+          test -n "$NOTIFICATION_URL"
+          test -n "$NOTIFICATION_SECRET"
+          curl --fail --silent --show-error --request POST "$NOTIFICATION_URL" \
+            --header "content-type: application/json" \
+            --header "x-notification-secret: $NOTIFICATION_SECRET" \
+            --data '{"audience":"subscribed","category":"app_update","title":"Connor Homelab update ready","body":"Version ${{ steps.release.outputs.version }} is ready to install. Open Connor Homelab and tap Check for updates.","data":{"version":"${{ steps.release.outputs.version }}"}}'
 
       - name: Keep a build artifact
         uses: actions/upload-artifact@v4

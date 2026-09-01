@@ -344,9 +344,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     messenger.showSnackBar(const SnackBar(content: Text('Checking for updates…')));
     try {
       final installed = await PackageInfo.fromPlatform();
-      final response = await http.get(Uri.parse('$_portalUrl/app-update.json')).timeout(const Duration(seconds: 8));
+      // A versioned URL prevents an old Azure/CDN response masking a new APK.
+      final updateUrl = Uri.parse('$_portalUrl/app-update.json').replace(
+        queryParameters: {'check': DateTime.now().millisecondsSinceEpoch.toString()},
+      );
+      final response = await http.get(updateUrl, headers: const {'Cache-Control': 'no-cache'}).timeout(const Duration(seconds: 8));
       if (response.statusCode != 200) throw Exception();
-      final release = jsonDecode(response.body) as Map<String, dynamic>;
+      final release = jsonDecode(response.body.trimLeft().replaceFirst('\uFEFF', '')) as Map<String, dynamic>;
       final latest = int.tryParse('${release['versionCode']}') ?? 0;
       final current = int.tryParse(installed.buildNumber) ?? 0;
       if (!mounted) return;

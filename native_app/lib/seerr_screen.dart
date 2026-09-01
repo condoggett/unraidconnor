@@ -48,16 +48,42 @@ class _HomelabWebAppScreenState extends State<HomelabWebAppScreen> {
 
   Future<void> _openOutside() => launchUrl(Uri.parse(widget.url), mode: LaunchMode.externalApplication);
 
+  Future<bool> _goBackInService() async {
+    if (await _controller.canGoBack()) {
+      await _controller.goBack();
+      return false;
+    }
+    return true;
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-          actions: [
-            IconButton(onPressed: () => _controller.reload(), icon: const Icon(Icons.refresh), tooltip: 'Refresh'),
-            IconButton(onPressed: _openOutside, icon: const Icon(Icons.open_in_browser), tooltip: 'Open in browser'),
-          ],
-          bottom: _progress < 100 ? PreferredSize(preferredSize: const Size.fromHeight(3), child: LinearProgressIndicator(value: _progress / 100)) : null,
+  Widget build(BuildContext context) => PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          final leaveService = await _goBackInService();
+          if (!mounted || !leaveService) return;
+          Navigator.of(this.context).pop();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              onPressed: () async {
+                final leaveService = await _goBackInService();
+                if (!mounted || !leaveService) return;
+                Navigator.of(this.context).pop();
+              },
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Back',
+            ),
+            title: Text(widget.title),
+            actions: [
+              IconButton(onPressed: () => _controller.reload(), icon: const Icon(Icons.refresh), tooltip: 'Refresh'),
+              IconButton(onPressed: _openOutside, icon: const Icon(Icons.open_in_browser), tooltip: 'Open in browser'),
+            ],
+            bottom: _progress < 100 ? PreferredSize(preferredSize: const Size.fromHeight(3), child: LinearProgressIndicator(value: _progress / 100)) : null,
+          ),
+          body: WebViewWidget(controller: _controller),
         ),
-        body: WebViewWidget(controller: _controller),
       );
 }
