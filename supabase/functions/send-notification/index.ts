@@ -64,7 +64,7 @@ Deno.serve(async (request) => {
     } else if (requesterEmail) {
       const { data: requester } = await supabase.from('profiles').select('id').ilike('email', requesterEmail).maybeSingle();
       users = requester ? [requester.id] : [];
-    } else {
+    } else if (!event.includes('test')) {
       return Response.json({ error: 'Seerr notifications require data.requester_email for personal delivery.' }, { status: 400 });
     }
   }
