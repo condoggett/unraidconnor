@@ -39,7 +39,7 @@ jobs:
           storePassword=$ANDROID_STORE_PASSWORD
           keyPassword=$ANDROID_KEY_PASSWORD
           keyAlias=$ANDROID_KEY_ALIAS
-          storeFile=app/connor-homelab-release.jks
+          storeFile=connor-homelab-release.jks
           EOF
 
       - name: Build signed release APK
