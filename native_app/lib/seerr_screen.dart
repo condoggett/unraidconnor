@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 class SeerrScreen extends StatefulWidget {
   const SeerrScreen({super.key, required this.url});
@@ -20,14 +21,28 @@ class _SeerrScreenState extends State<SeerrScreen> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
-        onProgress: (value) => mounted ? setState(() => _progress = value) : null,
+        onProgress: (value) {
+          if (mounted) setState(() => _progress = value);
+        },
         onNavigationRequest: (request) {
           final uri = Uri.tryParse(request.url);
           if (uri == null || uri.scheme != 'https') return NavigationDecision.prevent;
           return NavigationDecision.navigate;
         },
-      ))
-      ..loadRequest(Uri.parse(widget.url));
+      ));
+    _prepareSession();
+  }
+
+  Future<void> _prepareSession() async {
+    // Cloudflare Access can use a third-party cookie during its secure sign-in
+    // hand-off.  Android WebView does not always accept it by default, which
+    // made the user appear signed out every time this in-app page opened.
+    final platformController = _controller.platform;
+    final cookieManager = WebViewCookieManager().platform;
+    if (platformController is AndroidWebViewController && cookieManager is AndroidWebViewCookieManager) {
+      await cookieManager.setAcceptThirdPartyCookies(platformController, true);
+    }
+    if (mounted) await _controller.loadRequest(Uri.parse(widget.url));
   }
 
   Future<void> _openOutside() => launchUrl(Uri.parse(widget.url), mode: LaunchMode.externalApplication);
