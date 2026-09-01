@@ -282,6 +282,15 @@ class ReleaseNotesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: const [
         _ReleaseNote(
+          version: '3.2.0',
+          changes: [
+            'Schedule maintenance notices with start and end times; banners appear and hide automatically in the app.',
+            'Immich highlights now have a private activity summary, refresh support and timestamps.',
+            'New Update centre shows installed/latest versions and opens verified updates.',
+            'Connection diagnostics now separately check app sign-in, portal reachability and the Unraid tunnel.',
+          ],
+        ),
+        _ReleaseNote(
           version: '3.1.0',
           changes: [
             'Home Assistant is now a clearer in-app home hub with secure-session status and quick access.',

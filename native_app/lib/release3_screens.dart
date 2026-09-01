@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'seerr_screen.dart';
@@ -57,6 +58,9 @@ class _MaintenanceCenterScreenState extends State<MaintenanceCenterScreen> {
                 .order('created_at', ascending: false)
                 .limit(30);
       _items = (rows as List).cast<Map<String, dynamic>>();
+      if (!widget.admin) {
+        _items = _items.where(_noticeIsLive).toList();
+      }
     } catch (_) {
       _error = 'Maintenance centre will be available after the V3 Supabase migration is applied.';
     } finally {
@@ -64,51 +68,133 @@ class _MaintenanceCenterScreenState extends State<MaintenanceCenterScreen> {
     }
   }
 
+  bool _noticeIsLive(Map<String, dynamic> notice) {
+    if (notice['active'] != true) return false;
+    final now = DateTime.now().toUtc();
+    final starts = DateTime.tryParse('${notice['starts_at'] ?? ''}')?.toUtc();
+    final ends = DateTime.tryParse('${notice['ends_at'] ?? ''}')?.toUtc();
+    return (starts == null || !now.isBefore(starts)) &&
+        (ends == null || now.isBefore(ends));
+  }
+
+  String _noticeState(Map<String, dynamic> notice) {
+    if (notice['active'] != true) return 'Draft';
+    final now = DateTime.now().toUtc();
+    final starts = DateTime.tryParse('${notice['starts_at'] ?? ''}')?.toUtc();
+    final ends = DateTime.tryParse('${notice['ends_at'] ?? ''}')?.toUtc();
+    if (starts != null && now.isBefore(starts)) return 'Scheduled';
+    if (ends != null && !now.isBefore(ends)) return 'Ended';
+    return 'Live';
+  }
+
+  String _noticeSummary(Map<String, dynamic> notice) {
+    var text = '${notice['message'] ?? ''}';
+    final starts = DateTime.tryParse('${notice['starts_at'] ?? ''}');
+    final ends = DateTime.tryParse('${notice['ends_at'] ?? ''}');
+    if (starts != null) text += '\nStarts ${_dateTime(starts, '')}';
+    if (ends != null)
+      text += '${starts == null ? '\n' : ' · '}Ends ${_dateTime(ends, '')}';
+    return text;
+  }
+
+  String _dateTime(DateTime? value, String fallback) {
+    if (value == null) return fallback;
+    final local = value.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')} ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<DateTime?> _pickDateTime(DateTime? initial) async {
+    final seed = initial?.toLocal() ?? DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+      initialDate: seed,
+    );
+    if (date == null || !mounted) return null;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(seed),
+    );
+    if (time == null) return null;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
   Future<void> _createNotice() async {
     final title = TextEditingController(text: 'Scheduled maintenance');
     final message = TextEditingController();
     final active = ValueNotifier(true);
+    DateTime? startsAt;
+    DateTime? endsAt;
     final saved = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create maintenance notice'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: title,
-              maxLength: 80,
-              decoration: const InputDecoration(labelText: 'Title'),
-            ),
-            TextField(
-              controller: message,
-              maxLines: 3,
-              maxLength: 240,
-              decoration: const InputDecoration(
-                labelText: 'What will be affected?',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Create maintenance notice'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: title,
+                maxLength: 80,
+                decoration: const InputDecoration(labelText: 'Title'),
               ),
-            ),
-            ValueListenableBuilder<bool>(
-              valueListenable: active,
-              builder: (_, value, _) => SwitchListTile(
+              TextField(
+                controller: message,
+                maxLines: 3,
+                maxLength: 240,
+                decoration: const InputDecoration(
+                  labelText: 'What will be affected?',
+                ),
+              ),
+              ValueListenableBuilder<bool>(
+                valueListenable: active,
+                builder: (_, value, _) => SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Show banner now'),
+                  value: value,
+                  onChanged: (next) => active.value = next,
+                ),
+              ),
+              ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Show banner now'),
-                value: value,
-                onChanged: (next) => active.value = next,
+                leading: const Icon(Icons.schedule_outlined),
+                title: const Text('Start time'),
+                subtitle: Text(_dateTime(startsAt, 'Start immediately')),
+                onTap: () async {
+                  final value = await _pickDateTime(startsAt);
+                  if (value != null) setDialogState(() => startsAt = value);
+                },
               ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.event_busy_outlined),
+                title: const Text('End time'),
+                subtitle: Text(_dateTime(endsAt, 'Hide manually')),
+                trailing: endsAt == null
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => setDialogState(() => endsAt = null),
+                      ),
+                onTap: () async {
+                  final value = await _pickDateTime(endsAt ?? startsAt);
+                  if (value != null) setDialogState(() => endsAt = value);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Publish'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Publish'),
-          ),
-        ],
       ),
     );
     if (saved != true) return;
@@ -117,6 +203,8 @@ class _MaintenanceCenterScreenState extends State<MaintenanceCenterScreen> {
         'active': active.value,
         'title': title.text.trim(),
         'message': message.text.trim(),
+        'starts_at': startsAt?.toUtc().toIso8601String(),
+        'ends_at': endsAt?.toUtc().toIso8601String(),
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -179,25 +267,25 @@ class _MaintenanceCenterScreenState extends State<MaintenanceCenterScreen> {
                       child: Text('No maintenance is currently planned.'),
                     ),
                   ),
-                ..._items.map(
-                  (item) => Card(
-                    color: item['active'] == true
-                        ? const Color(0xff4a3518)
-                        : null,
+                ..._items.map((item) {
+                  final state = _noticeState(item);
+                  return Card(
+                    color: state == 'Live' ? const Color(0xff4a3518) : null,
                     child: ListTile(
                       leading: Icon(
-                        item['active'] == true
+                        state == 'Live'
                             ? Icons.construction_outlined
+                            : state == 'Scheduled'
+                            ? Icons.schedule_outlined
                             : Icons.history,
                       ),
                       title: Text('${item['title']}'),
-                      subtitle: Text('${item['message'] ?? ''}'),
-                      trailing: item['active'] == true
-                          ? const Chip(label: Text('Active'))
-                          : const Text('Past'),
+                      subtitle: Text(_noticeSummary(item)),
+                      isThreeLine: item['starts_at'] != null,
+                      trailing: Chip(label: Text(state)),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ],
             ),
           ),
@@ -384,6 +472,116 @@ class _ProfileScreenState extends State<ProfileScreen> {
   );
 }
 
+class UpdateCenterScreen extends StatefulWidget {
+  const UpdateCenterScreen({super.key, required this.onCheckForUpdates});
+  final Future<void> Function() onCheckForUpdates;
+
+  @override
+  State<UpdateCenterScreen> createState() => _UpdateCenterScreenState();
+}
+
+class _UpdateCenterScreenState extends State<UpdateCenterScreen> {
+  String _installed = 'Checking…';
+  String? _latest;
+  String? _notes;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://conhomelab.uk/app-update.json?check=${DateTime.now().millisecondsSinceEpoch}',
+            ),
+          )
+          .timeout(const Duration(seconds: 8));
+      final release = response.statusCode == 200
+          ? jsonDecode(response.body) as Map<String, dynamic>
+          : <String, dynamic>{};
+      _installed = '${info.version} (${info.buildNumber})';
+      _latest = release['version']?.toString();
+      _notes = release['notes']?.toString();
+    } catch (_) {
+      _installed = 'Unavailable';
+      _notes = 'Could not check the live release manifest. Use connection diagnostics and try again.';
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Update centre')),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.all(18),
+              children: [
+                Text(
+                  'Connor Homelab updates',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.phone_android_outlined),
+                    title: const Text('Installed version'),
+                    subtitle: Text(_installed),
+                  ),
+                ),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.new_releases_outlined),
+                    title: const Text('Latest published version'),
+                    subtitle: Text(
+                      _latest ?? 'No live release manifest found.',
+                    ),
+                  ),
+                ),
+                if (_notes != null)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Release notes',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(_notes!),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: widget.onCheckForUpdates,
+                  icon: const Icon(Icons.system_update_outlined),
+                  label: const Text('Check and install update'),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Every update is downloaded from the Connor Homelab GitHub release and checked against its published security hash before Android opens the installer.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+  );
+}
+
 class ImmichHighlightsScreen extends StatefulWidget {
   const ImmichHighlightsScreen({super.key});
   @override
@@ -401,6 +599,7 @@ class _ImmichHighlightsScreenState extends State<ImmichHighlightsScreen> {
   }
 
   Future<void> _load() async {
+    setState(() => _loading = true);
     try {
       final rows = await _client
           .from('notifications')
@@ -422,55 +621,80 @@ class _ImmichHighlightsScreenState extends State<ImmichHighlightsScreen> {
     }
   }
 
+  String _date(Object? value) {
+    final date = DateTime.tryParse('${value ?? ''}')?.toLocal();
+    if (date == null) return '';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Immich highlights')),
     body: _loading
         ? const Center(child: CircularProgressIndicator())
-        : ListView(
-            padding: const EdgeInsets.all(18),
-            children: [
-              Text(
-                'Recent photo moments',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Your personal Immich events appear here. Photo thumbnails need a read-only Immich integration and are never loaded with a key in the app.',
-              ),
-              const SizedBox(height: 14),
-              if (_items.isEmpty)
-                const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                      'No Immich highlights yet. Open Immich to browse your library.',
-                    ),
-                  ),
+        : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.all(18),
+              children: [
+                Text(
+                  'Recent photo moments',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-              ..._items.map(
-                (item) => Card(
+                const SizedBox(height: 8),
+                const Text(
+                  'Your personal Immich moments appear here. The app never embeds an Immich API key; richer private thumbnails can be added later with a read-only server-side connection.',
+                ),
+                const SizedBox(height: 14),
+                Card(
                   child: ListTile(
-                    leading: const Icon(Icons.photo_library_outlined),
-                    title: Text('${item['title']}'),
-                    subtitle: Text('${item['body'] ?? ''}'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HomelabWebAppScreen(
-                      title: 'Immich',
-                      url: 'https://photos.conhomelab.uk',
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.auto_awesome_outlined),
+                    ),
+                    title: Text(
+                      '${_items.length} recent photo moment${_items.length == 1 ? '' : 's'}',
+                    ),
+                    subtitle: const Text(
+                      'Pull down to refresh your private photo activity.',
                     ),
                   ),
                 ),
-                icon: const Icon(Icons.open_in_new),
-                label: const Text('Open Immich'),
-              ),
-            ],
+                if (_items.isEmpty)
+                  const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text(
+                        'No Immich highlights yet. Open Immich to browse your library.',
+                      ),
+                    ),
+                  ),
+                ..._items.map(
+                  (item) => Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.photo_library_outlined),
+                      title: Text('${item['title']}'),
+                      subtitle: Text(
+                        '${item['body'] ?? ''}${_date(item['created_at']).isEmpty ? '' : '\n${_date(item['created_at'])}'}',
+                      ),
+                      isThreeLine: _date(item['created_at']).isNotEmpty,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HomelabWebAppScreen(
+                        title: 'Immich',
+                        url: 'https://photos.conhomelab.uk',
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Open Immich'),
+                ),
+              ],
+            ),
           ),
   );
 }
@@ -545,7 +769,8 @@ class DiagnosticsScreen extends StatefulWidget {
 }
 
 class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
-  String _message = 'Checking connection…';
+  bool _loading = true;
+  List<_DiagnosticItem> _checks = [];
   @override
   void initState() {
     super.initState();
@@ -553,49 +778,118 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
   }
 
   Future<void> _check() async {
+    setState(() => _loading = true);
+    final checks = <_DiagnosticItem>[];
+    checks.add(
+      _DiagnosticItem(
+        'App sign-in',
+        Supabase.instance.client.auth.currentSession != null,
+        'Your Supabase family account is signed in.',
+      ),
+    );
+    try {
+      final portal = await http
+          .get(Uri.parse('https://conhomelab.uk'))
+          .timeout(const Duration(seconds: 8));
+      checks.add(
+        _DiagnosticItem(
+          'Portal connection',
+          portal.statusCode < 500,
+          portal.statusCode < 500
+              ? 'Connor Homelab portal is reachable.'
+              : 'The portal returned ${portal.statusCode}.',
+        ),
+      );
+    } catch (_) {
+      checks.add(
+        const _DiagnosticItem(
+          'Portal connection',
+          false,
+          'Cannot reach conhomelab.uk. Check your internet connection.',
+        ),
+      );
+    }
     try {
       final response = await http
           .get(Uri.parse('https://conhomelab.uk/api/status'))
           .timeout(const Duration(seconds: 8));
       final status = jsonDecode(response.body) as Map<String, dynamic>;
-      if (mounted)
-        setState(
-          () => _message = status['online'] == true
-              ? 'Homelab status bridge is online.'
-              : 'The tunnel is reachable but the status bridge is unavailable.',
-        );
+      final online = status['online'] == true;
+      checks.add(
+        _DiagnosticItem(
+          'Homelab tunnel and status bridge',
+          online,
+          online ? 'Unraid status bridge is online.' : 'The portal is reachable, but the Unraid status bridge is unavailable.',
+        ),
+      );
     } catch (_) {
-      if (mounted)
-        setState(
-          () => _message = 'Cannot reach Connor Homelab. Check your internet connection, Cloudflare Access session, then the homelab tunnel.',
-        );
+      checks.add(
+        const _DiagnosticItem(
+          'Homelab tunnel and status bridge',
+          false,
+          'Cannot reach the status bridge. Sign in to Cloudflare Access again if prompted, then check the tunnel.',
+        ),
+      );
     }
+    if (mounted)
+      setState(() {
+        _checks = checks;
+        _loading = false;
+      });
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Connection diagnostics')),
-    body: ListView(
-      padding: const EdgeInsets.all(18),
-      children: [
-        const Icon(Icons.monitor_heart_outlined, size: 56),
-        const SizedBox(height: 16),
-        Text(_message, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 18),
-        const Card(
-          child: ListTile(
-            title: Text('How access works'),
-            subtitle: Text(
-              'The app keeps your Supabase sign-in and in-app Cloudflare session. Individual services keep their own login where required.',
-            ),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              const Icon(Icons.monitor_heart_outlined, size: 56),
+              const SizedBox(height: 16),
+              Text(
+                _checks.every((item) => item.ok)
+                    ? 'Everything looks healthy.'
+                    : 'One or more checks need attention.',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 18),
+              ..._checks.map(
+                (item) => Card(
+                  child: ListTile(
+                    leading: Icon(
+                      item.ok
+                          ? Icons.check_circle_outline
+                          : Icons.error_outline,
+                      color: item.ok ? const Color(0xff66e59a) : Colors.amber,
+                    ),
+                    title: Text(item.title),
+                    subtitle: Text(item.detail),
+                  ),
+                ),
+              ),
+              const Card(
+                child: ListTile(
+                  title: Text('How access works'),
+                  subtitle: Text(
+                    'The app keeps your Supabase sign-in and in-app Cloudflare session. Individual services keep their own login where required.',
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: _check,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Run check again'),
+              ),
+            ],
           ),
-        ),
-        OutlinedButton.icon(
-          onPressed: _check,
-          icon: const Icon(Icons.refresh),
-          label: const Text('Run check again'),
-        ),
-      ],
-    ),
   );
+}
+
+class _DiagnosticItem {
+  const _DiagnosticItem(this.title, this.ok, this.detail);
+  final String title;
+  final bool ok;
+  final String detail;
 }

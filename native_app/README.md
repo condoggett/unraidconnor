@@ -156,12 +156,17 @@ or leave a Git lock file behind.
 ## V3 feature map
 
 - **My profile** — name, icon, personal theme, dashboard layout, and app lock.
-- **Maintenance centre** — active family notices; admins can create a banner.
+- **Maintenance centre** — active family notices; admins can create a banner
+  with optional start and end times. The app makes it live at the start and
+  hides it after the end automatically; no Windows scheduled task is needed.
 - **Latest for you** — personal activity cards on the home screen.
 - **Now Available** — your available requested media, based on private
   notification history.
 - **App lock** — uses Android's own biometric or device-PIN prompt; biometric
   data never leaves the phone.
+- **Update centre and diagnostics** — shows installed/latest versions, launches
+  the verified updater, and separately checks sign-in, portal reachability and
+  the Unraid status tunnel.
 
 Service webhooks and connector setup are intentionally deferred to **V3.5**.
 

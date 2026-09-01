@@ -428,13 +428,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .maybeSingle();
         maintenance = await _client
             .from('maintenance_notices')
-            .select('title, message')
+            .select('active, title, message, starts_at, ends_at')
             .eq('active', true)
             .order('created_at', ascending: false)
             .limit(1)
             .maybeSingle();
       } catch (_) {
         // The optional Release 3 migration has not been applied yet.
+      }
+      if (maintenance != null && !_maintenanceIsLive(maintenance)) {
+        maintenance = null;
       }
       List<String> recentAppIds = [];
       try {
@@ -732,6 +735,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _ => Icons.bolt_outlined,
   };
 
+  bool _maintenanceIsLive(Map<String, dynamic> notice) {
+    if (notice['active'] != true) return false;
+    final now = DateTime.now().toUtc();
+    final starts = DateTime.tryParse('${notice['starts_at'] ?? ''}')?.toUtc();
+    final ends = DateTime.tryParse('${notice['ends_at'] ?? ''}')?.toUtc();
+    return (starts == null || !now.isBefore(starts)) &&
+        (ends == null || now.isBefore(ends));
+  }
+
   Future<void> _checkForUpdates() async {
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
@@ -1004,7 +1016,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           });
                       break;
                     case 'update':
-                      _checkForUpdates();
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => UpdateCenterScreen(
+                            onCheckForUpdates: _checkForUpdates,
+                          ),
+                        ),
+                      );
                       break;
                     case 'signout':
                       _client.auth.signOut();

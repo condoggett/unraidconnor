@@ -35,7 +35,7 @@ class _HomelabWebAppScreenState extends State<HomelabWebAppScreen> {
             if (mounted) setState(() => _error = null);
           },
           onWebResourceError: (error) {
-            if (mounted && error.isForMainFrame)
+            if (mounted && error.isForMainFrame == true)
               setState(() => _error = error.description);
           },
           onNavigationRequest: (request) {
