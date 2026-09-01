@@ -1,8 +1,8 @@
 {
-  "version": "3.6.0",
-  "versionCode": 31,
-  "downloadUrl": "https://github.com/condoggett/unraidconnor/releases/download/v3.6.0/Connor-Homelab-3.6.0.apk",
-  "sha256": "042fc3fbb3190fedfc7e6980ac0ff3f288770a96c73e000281ab3d5e864eaf0d",
-  "notes": "Version 3.6.0: Android release prepared by GitHub Actions.",
-  "publishedAt": "2026-09-01T19:47:19Z"
+  "version": "3.7.0",
+  "versionCode": 32,
+  "downloadUrl": "https://github.com/condoggett/unraidconnor/releases/download/v3.7.0/Connor-Homelab-3.7.0.apk",
+  "sha256": "b0eee0b0268828f36f900a5df9e519ffa3a198de32daa5cfab0877240690489a",
+  "notes": "Version 3.7.0: Android release prepared by GitHub Actions.",
+  "publishedAt": "2026-09-01T19:55:19Z"
 }
