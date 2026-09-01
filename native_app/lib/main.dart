@@ -205,6 +205,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _status;
   Set<String> _favourites = {};
   Set<String> _hidden = {};
+  List<String> _recentAppIds = [];
 
   @override
   void initState() { super.initState(); _load(); }
@@ -223,6 +224,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final preferences = await _client.from('user_preferences').select('favourite_app_ids, hidden_app_ids').eq('user_id', user.id).maybeSingle();
       final favourites = ((preferences?['favourite_app_ids'] as List?) ?? const []).map((id) => '$id').toSet();
       final hidden = ((preferences?['hidden_app_ids'] as List?) ?? const []).map((id) => '$id').toSet();
+      List<String> recentAppIds = [];
+      try {
+        final recent = await _client
+            .from('audit_events')
+            .select('app_id')
+            .eq('user_id', user.id)
+            .eq('event_type', 'app_opened')
+            .order('created_at', ascending: false)
+            .limit(12);
+        recentAppIds = (recent as List)
+            .map((row) => '${row['app_id'] ?? ''}')
+            .where((id) => id.isNotEmpty)
+            .toSet()
+            .toList();
+      } catch (_) {
+        // The dashboard still works for new accounts with no recent history.
+      }
       // Seerr is the family-facing media-request service, so it is the first
       // destination for non-admin family accounts whenever it is assigned.
       if (!admin) {
@@ -251,6 +269,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _status = status;
         _favourites = favourites;
         _hidden = hidden;
+        _recentAppIds = recentAppIds;
       });
     } catch (error) {
       if (mounted) setState(() => _error = 'Could not load your Homelab: $error');
@@ -412,7 +431,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    final visibleApps = _apps.where((app) => !_hidden.contains(app['id'])).toList();
+    final favourites = visibleApps.where((app) => _favourites.contains(app['id'])).toList();
+    final byId = {for (final app in visibleApps) app['id'] as String: app};
+    final recent = _recentAppIds.map((id) => byId[id]).whereType<Map<String, dynamic>>().toList();
+    final allApps = visibleApps.where((app) => !favourites.contains(app) && !recent.contains(app)).toList();
+    return Scaffold(
         appBar: AppBar(title: const Text('Connor Homelab'), actions: [
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationHistoryScreen())), tooltip: 'Notification history', icon: const Icon(Icons.notifications_outlined)),
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationSettingsScreen())), tooltip: 'Notification settings', icon: const Icon(Icons.notifications_active_outlined)),
@@ -429,11 +454,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 18),
             _StatusCard(status: _status),
             if (_error != null) Padding(padding: const EdgeInsets.only(top: 14), child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
+            if (favourites.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              const _SectionHeading(title: 'Pinned for you', subtitle: 'Your favourite services'),
+              const SizedBox(height: 10),
+              SizedBox(height: 132, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: favourites.length, separatorBuilder: (_, _) => const SizedBox(width: 10), itemBuilder: (_, index) => _QuickAppTile(app: favourites[index], onTap: () => _openApp(favourites[index])))),
+            ],
+            if (recent.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              const _SectionHeading(title: 'Continue where you left off', subtitle: 'Recently opened services'),
+              const SizedBox(height: 10),
+              SizedBox(height: 132, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: recent.length, separatorBuilder: (_, _) => const SizedBox(width: 10), itemBuilder: (_, index) => _QuickAppTile(app: recent[index], onTap: () => _openApp(recent[index])))),
+            ],
             const SizedBox(height: 24),
-            Text('Your apps', style: Theme.of(context).textTheme.titleLarge),
+            _SectionHeading(title: favourites.isEmpty && recent.isEmpty ? 'Your apps' : 'All apps', subtitle: '${visibleApps.length} service${visibleApps.length == 1 ? '' : 's'} available to you'),
             const SizedBox(height: 10),
-            if (_apps.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No apps have been assigned to this account yet. Ask an admin to grant access.'))),
-            ..._apps.where((app) => !_hidden.contains(app['id'])).map((app) => Card(child: ListTile(leading: CircleAvatar(child: Text((app['icon'] as String?)?.isNotEmpty == true ? app['icon'] as String : '•')), title: Text(app['name'] as String), subtitle: Text((app['description'] as String?) ?? ''), trailing: const Icon(Icons.arrow_forward_ios), onTap: () => _openApp(app)))),
+            if (visibleApps.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No apps have been assigned to this account yet. Ask an admin to grant access.'))),
+            ...allApps.map((app) => Card(child: ListTile(leading: CircleAvatar(child: Text((app['icon'] as String?)?.isNotEmpty == true ? app['icon'] as String : '•')), title: Text(app['name'] as String), subtitle: Text((app['description'] as String?) ?? ''), trailing: const Icon(Icons.arrow_forward_ios), onTap: () => _openApp(app)))),
             const SizedBox(height: 18),
             OutlinedButton.icon(onPressed: _checkForUpdates, icon: const Icon(Icons.system_update_outlined), label: const Text('Check for app updates')),
             const SizedBox(height: 10),
@@ -441,6 +478,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ]),
         ),
       );
+  }
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({required this.title, required this.subtitle});
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 2),
+        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+      ]);
+}
+
+class _QuickAppTile extends StatelessWidget {
+  const _QuickAppTile({required this.app, required this.onTap});
+  final Map<String, dynamic> app;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = (app['icon'] as String?)?.trim();
+    return SizedBox(
+      width: 152,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              CircleAvatar(child: Text(icon?.isNotEmpty == true ? icon! : '•')),
+              const Spacer(),
+              Text(app['name'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 2),
+              const Text('Open service', style: TextStyle(fontSize: 12)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _StatusCard extends StatelessWidget {
