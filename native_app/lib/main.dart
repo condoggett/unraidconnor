@@ -368,6 +368,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _avatar = 'auto';
   bool _appLockEnabled = false;
   Map<String, dynamic>? _maintenance;
+  List<Map<String, dynamic>> _activity = [];
 
   @override
   void initState() {
@@ -473,6 +474,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             : (left['sort_order'] as int).compareTo(right['sort_order'] as int);
       });
       final status = await _fetchStatus();
+      List<Map<String, dynamic>> activity = [];
+      try {
+        final events = await _client
+            .from('notifications')
+            .select('title, body, category, created_at')
+            .order('created_at', ascending: false)
+            .limit(3);
+        activity = (events as List).cast<Map<String, dynamic>>();
+      } catch (_) {
+        // Activity is helpful, but it must never prevent the dashboard loading.
+      }
       if (!mounted) return;
       setState(() {
         final displayName = profile?['display_name'] as String?;
@@ -490,6 +502,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _avatar = '${dashboardSettings?['avatar_icon'] ?? 'auto'}';
         _appLockEnabled = dashboardSettings?['app_lock_enabled'] == true;
         _maintenance = maintenance;
+        _activity = activity;
       });
     } catch (error) {
       if (mounted) {
@@ -709,6 +722,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'photo' => Icons.photo_camera_outlined,
     'star' => Icons.star_outline,
     _ => Icons.account_circle_outlined,
+  };
+
+  IconData _activityIcon(String category) => switch (category) {
+    'unraid' => Icons.dns_outlined,
+    'home_assistant' => Icons.home_outlined,
+    'app_update' => Icons.system_update_outlined,
+    'app' => Icons.apps_outlined,
+    _ => Icons.bolt_outlined,
   };
 
   Future<void> _checkForUpdates() async {
@@ -939,6 +960,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       );
                       break;
+                    case 'maintenance':
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              MaintenanceCenterScreen(admin: _admin),
+                        ),
+                      );
+                      break;
                     case 'diagnostics':
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -1017,6 +1046,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: ListTile(
                       leading: Icon(Icons.photo_library_outlined),
                       title: Text('Immich highlights'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'maintenance',
+                    child: ListTile(
+                      leading: Icon(Icons.construction_outlined),
+                      title: Text('Maintenance centre'),
                     ),
                   ),
                   PopupMenuItem(
@@ -1114,6 +1150,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                         ),
+                      if (_activity.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(child: _SectionHeading(title: 'Latest for you', subtitle: 'Recent homelab activity')),
+                            TextButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FamilyActivityScreen())), child: const Text('See all')),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ..._activity.map((event) => Card(child: ListTile(
+                          dense: true,
+                          leading: Icon(_activityIcon('${event['category'] ?? ''}')),
+                          title: Text('${event['title'] ?? 'Homelab activity'}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                          subtitle: Text('${event['body'] ?? ''}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ))),
+                      ],
                       if (_error != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 14),

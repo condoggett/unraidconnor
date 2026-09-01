@@ -13,6 +13,187 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
+class MaintenanceCenterScreen extends StatefulWidget {
+  const MaintenanceCenterScreen({super.key, required this.admin});
+  final bool admin;
+
+  @override
+  State<MaintenanceCenterScreen> createState() =>
+      _MaintenanceCenterScreenState();
+}
+
+class _MaintenanceCenterScreenState extends State<MaintenanceCenterScreen> {
+  final _client = Supabase.instance.client;
+  bool _loading = true;
+  String? _error;
+  List<Map<String, dynamic>> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      var query = _client
+          .from('maintenance_notices')
+          .select('id, active, title, message, starts_at, ends_at, created_at')
+          .order('created_at', ascending: false);
+      if (!widget.admin) query = query.eq('active', true);
+      final rows = await query.limit(30);
+      _items = (rows as List).cast<Map<String, dynamic>>();
+    } catch (_) {
+      _error = 'Maintenance centre will be available after the V3 Supabase migration is applied.';
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _createNotice() async {
+    final title = TextEditingController(text: 'Scheduled maintenance');
+    final message = TextEditingController();
+    final active = ValueNotifier(true);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create maintenance notice'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: title,
+              maxLength: 80,
+              decoration: const InputDecoration(labelText: 'Title'),
+            ),
+            TextField(
+              controller: message,
+              maxLines: 3,
+              maxLength: 240,
+              decoration: const InputDecoration(
+                labelText: 'What will be affected?',
+              ),
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: active,
+              builder: (_, value, _) => SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Show banner now'),
+                value: value,
+                onChanged: (next) => active.value = next,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Publish'),
+          ),
+        ],
+      ),
+    );
+    if (saved != true) return;
+    try {
+      await _client.from('maintenance_notices').insert({
+        'active': active.value,
+        'title': title.text.trim(),
+        'message': message.text.trim(),
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Maintenance notice published.')),
+        );
+        _load();
+      }
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not publish the maintenance notice.'),
+          ),
+        );
+    } finally {
+      title.dispose();
+      message.dispose();
+      active.dispose();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Maintenance centre'),
+      actions: [
+        if (widget.admin)
+          IconButton(
+            onPressed: _createNotice,
+            tooltip: 'Create notice',
+            icon: const Icon(Icons.add_alert_outlined),
+          ),
+      ],
+    ),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.all(18),
+              children: [
+                Text(
+                  widget.admin
+                      ? 'Plan and review service maintenance.'
+                      : 'Planned work that may affect your services.',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 14),
+                if (_error != null)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(_error!),
+                    ),
+                  ),
+                if (_items.isEmpty && _error == null)
+                  const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('No maintenance is currently planned.'),
+                    ),
+                  ),
+                ..._items.map(
+                  (item) => Card(
+                    color: item['active'] == true
+                        ? const Color(0xff4a3518)
+                        : null,
+                    child: ListTile(
+                      leading: Icon(
+                        item['active'] == true
+                            ? Icons.construction_outlined
+                            : Icons.history,
+                      ),
+                      title: Text('${item['title']}'),
+                      subtitle: Text('${item['message'] ?? ''}'),
+                      trailing: item['active'] == true
+                          ? const Chip(label: Text('Active'))
+                          : const Text('Past'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+  );
+}
+
 class _ProfileScreenState extends State<ProfileScreen> {
   final _client = Supabase.instance.client;
   final _name = TextEditingController();
