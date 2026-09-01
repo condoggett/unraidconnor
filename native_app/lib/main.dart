@@ -81,6 +81,11 @@ class HomelabApp extends StatelessWidget {
             seedColor: const Color(0xff72d8ff), brightness: Brightness.dark,
             surface: const Color(0xff101a26),
           ),
+          // Avoid the optional Material 3 InkSparkle shader. Windows App
+          // Control blocks Flutter's local shader compiler on this PC; the
+          // standard ripple keeps the same interaction feedback and builds
+          // without relaxing any Windows security policy.
+          splashFactory: InkRipple.splashFactory,
           scaffoldBackgroundColor: const Color(0xff09111b),
         ),
         home: const SessionGate(),
