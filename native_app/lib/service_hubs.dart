@@ -39,7 +39,11 @@ class UnraidDashboardScreen extends StatelessWidget {
       body: ListView(padding: const EdgeInsets.all(18), children: [
         Text('Server health', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
-        Row(children: [Expanded(child: Card(child: ListTile(title: const Text('CPU load'), subtitle: Text(_value((status?['loadAverage'] as List?)?.isNotEmpty == true ? status?['loadAverage'][0] : null))))), const SizedBox(width: 10), Expanded(child: Card(child: ListTile(title: const Text('Memory'), subtitle: Text(memory == null ? '—' : '${memory['usedPercent']}% used'))))]),
+        Row(children: [
+          Expanded(child: Card(child: ListTile(title: const Text('CPU load'), subtitle: Text(_value((status?['loadAverage'] as List?)?.isNotEmpty == true ? status?['loadAverage'][0] : null))))),
+          const SizedBox(width: 10),
+          Expanded(child: Card(child: ListTile(title: const Text('Memory'), subtitle: Text(memory == null ? '—' : '${memory['usedPercent']}% used'))))),
+        ]),
         Card(child: ListTile(leading: const Icon(Icons.widgets_outlined), title: const Text('Containers'), subtitle: Text(docker == null ? 'No live inventory.' : '${docker['running']} / ${docker['total']} running'))),
         Card(child: ListTile(leading: Icon(stopped.isEmpty ? Icons.check_circle_outline : Icons.warning_amber_outlined), title: Text(stopped.isEmpty ? 'No stopped containers' : '${stopped.length} stopped container${stopped.length == 1 ? '' : 's'}'), subtitle: Text(stopped.isEmpty ? 'All monitored workloads are running.' : stopped.join(', ')))),
         const SizedBox(height: 18),
