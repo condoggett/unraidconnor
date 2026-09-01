@@ -365,6 +365,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<String> _recentAppIds = [];
   String _theme = 'ocean';
   String _layout = 'standard';
+  String _avatar = 'auto';
   bool _appLockEnabled = false;
   Map<String, dynamic>? _maintenance;
 
@@ -421,7 +422,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       try {
         dashboardSettings = await _client
             .from('user_dashboard_settings')
-            .select('theme, dashboard_layout, app_lock_enabled')
+            .select('theme, dashboard_layout, avatar_icon, app_lock_enabled')
             .eq('user_id', user.id)
             .maybeSingle();
         maintenance = await _client
@@ -486,6 +487,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _recentAppIds = recentAppIds;
         _theme = '${dashboardSettings?['theme'] ?? 'ocean'}';
         _layout = '${dashboardSettings?['dashboard_layout'] ?? 'standard'}';
+        _avatar = '${dashboardSettings?['avatar_icon'] ?? 'auto'}';
         _appLockEnabled = dashboardSettings?['app_lock_enabled'] == true;
         _maintenance = maintenance;
       });
@@ -699,6 +701,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  IconData _profileIcon() => switch (_avatar) {
+    'home' => Icons.home_outlined,
+    'movie' => Icons.movie_outlined,
+    'game' => Icons.sports_esports_outlined,
+    'photo' => Icons.photo_camera_outlined,
+    'star' => Icons.star_outline,
+    _ => Icons.account_circle_outlined,
+  };
 
   Future<void> _checkForUpdates() async {
     final messenger = ScaffoldMessenger.of(context);
@@ -952,6 +963,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     case 'personalise':
                       _personalise();
                       break;
+                    case 'profile':
+                      Navigator.of(context)
+                          .push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const ProfileScreen(),
+                            ),
+                          )
+                          .then((saved) {
+                            if (saved == true) _load();
+                          });
+                      break;
                     case 'update':
                       _checkForUpdates();
                       break;
@@ -960,7 +982,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       break;
                   }
                 },
-                itemBuilder: (context) => const [
+                itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'home',
                     child: ListTile(
@@ -1012,6 +1034,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   PopupMenuItem(
+                    value: 'profile',
+                    child: ListTile(
+                      leading: Icon(_profileIcon()),
+                      title: const Text('My profile'),
+                    ),
+                  ),
+                  PopupMenuItem(
                     value: 'personalise',
                     child: ListTile(
                       leading: Icon(Icons.tune),
@@ -1051,9 +1080,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 : ListView(
                     padding: EdgeInsets.all(horizontalPadding),
                     children: [
-                      Text(
-                        'Welcome back, $_name',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      Row(
+                        children: [
+                          CircleAvatar(child: Icon(_profileIcon())),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Welcome back, $_name',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 5),
                       Text(

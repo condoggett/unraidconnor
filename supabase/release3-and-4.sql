@@ -44,3 +44,27 @@ drop policy if exists "Members read active maintenance notices" on public.mainte
 create policy "Members read active maintenance notices" on public.maintenance_notices for select using (auth.uid() is not null and active = true);
 drop policy if exists "Admins manage maintenance notices" on public.maintenance_notices;
 create policy "Admins manage maintenance notices" on public.maintenance_notices for all using (public.is_admin()) with check (public.is_admin());
+
+-- Deliberately limited RPC: a member may update only their own display name.
+-- It avoids granting users broad UPDATE access to the profiles table.
+create or replace function public.update_my_profile(new_display_name text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not signed in';
+  end if;
+  if char_length(trim(new_display_name)) < 1 or char_length(trim(new_display_name)) > 40 then
+    raise exception 'Display name must be between 1 and 40 characters';
+  end if;
+  update public.profiles
+  set display_name = trim(new_display_name)
+  where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.update_my_profile(text) from public;
+grant execute on function public.update_my_profile(text) to authenticated;
