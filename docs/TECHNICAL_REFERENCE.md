@@ -229,3 +229,20 @@ should extend it instead of starting another unlinked guide.
 
 For the click-by-click APK workflow and failure table, see
 [`PUBLISH_AND_DIAGNOSE_ANDROID_RELEASES.md`](PUBLISH_AND_DIAGNOSE_ANDROID_RELEASES.md).
+
+## 25. V3.6 family access management
+
+`AdminFamilyAccessScreen` uses the existing `profiles`, `apps`, and
+`user_app_access` policies. It is visible only when the signed-in profile has
+the admin role. The UI is convenience only: Supabase RLS still prevents an
+ordinary user from listing people or changing access. Test grants and revokes
+with an ordinary family account after any future policy change.
+
+## 26. Android 15 to 17 support
+
+Android 15+ enforces edge-to-edge layout for recent target SDKs; Flutter's
+Material layout must keep app-bar and bottom-navigation content inset-safe.
+V3.6 is tested as a compatibility baseline on Android 15/16 and Android 17.
+Keep the production target on the current stable Flutter/Android SDK until the
+Android 17 SDK and the plugin set are stable, then perform a dedicated target
+SDK upgrade release.

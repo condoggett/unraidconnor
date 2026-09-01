@@ -286,6 +286,14 @@ class ReleaseNotesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: const [
         _ReleaseNote(
+          version: '3.6.0',
+          changes: [
+            'New admin Family Access centre: safely choose a family member and grant or remove their assigned services from the app.',
+            'Family Control Centre brings your personalised dashboard, media, activity, health, maintenance and help tools together for modern Android phones.',
+            'Designed for Android 15, 16 and Android 17 compatibility, including modern edge-to-edge navigation.',
+          ],
+        ),
+        _ReleaseNote(
           version: '3.5.0',
           changes: [
             'A more personal family dashboard: choose Classic, Compact or Glass cards, alongside your theme, layout and pinned services.',

@@ -1181,6 +1181,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             if (saved == true) _load();
                           });
                       break;
+                    case 'family_access':
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AdminFamilyAccessScreen(),
+                        ),
+                      );
+                      break;
                     case 'welcome':
                       _openWelcome();
                       break;
@@ -1263,6 +1270,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       title: const Text('My profile'),
                     ),
                   ),
+                  if (_admin)
+                    PopupMenuItem(
+                      value: 'family_access',
+                      child: ListTile(
+                        leading: Icon(Icons.manage_accounts_outlined),
+                        title: Text('Manage family access'),
+                      ),
+                    ),
                   PopupMenuItem(
                     value: 'welcome',
                     child: ListTile(

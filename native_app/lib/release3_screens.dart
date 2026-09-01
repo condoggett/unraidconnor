@@ -896,3 +896,158 @@ class _DiagnosticItem {
   final bool ok;
   final String detail;
 }
+
+/// Admin-only editor for the existing user_app_access table. Supabase RLS is
+/// the final authority: a non-admin cannot read or change these records.
+class AdminFamilyAccessScreen extends StatefulWidget {
+  const AdminFamilyAccessScreen({super.key});
+
+  @override
+  State<AdminFamilyAccessScreen> createState() =>
+      _AdminFamilyAccessScreenState();
+}
+
+class _AdminFamilyAccessScreenState extends State<AdminFamilyAccessScreen> {
+  final _client = Supabase.instance.client;
+  bool _loading = true;
+  String? _error;
+  List<Map<String, dynamic>> _people = [];
+  List<Map<String, dynamic>> _apps = [];
+  Set<String> _access = {};
+  String? _selectedUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final people = await _client
+          .from('profiles')
+          .select('id, display_name, email, role')
+          .order('display_name');
+      final apps = await _client
+          .from('apps')
+          .select('id, name, description, icon, sort_order')
+          .eq('enabled', true)
+          .order('sort_order');
+      _people = (people as List).cast<Map<String, dynamic>>();
+      _apps = (apps as List).cast<Map<String, dynamic>>();
+      _selectedUserId ??= _people.isEmpty
+          ? null
+          : _people.first['id'] as String;
+      await _loadAccess();
+    } catch (_) {
+      _error = 'This account is not allowed to manage family access.';
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadAccess() async {
+    final userId = _selectedUserId;
+    if (userId == null) return;
+    final rows = await _client
+        .from('user_app_access')
+        .select('app_id')
+        .eq('user_id', userId);
+    _access = (rows as List).map((row) => '${row['app_id']}').toSet();
+  }
+
+  Future<void> _toggle(Map<String, dynamic> app, bool grant) async {
+    final userId = _selectedUserId;
+    if (userId == null) return;
+    final appId = app['id'] as String;
+    setState(() {
+      if (grant) {
+        _access.add(appId);
+      } else {
+        _access.remove(appId);
+      }
+    });
+    try {
+      if (grant) {
+        await _client.from('user_app_access').upsert({
+          'user_id': userId,
+          'app_id': appId,
+        });
+      } else {
+        await _client
+            .from('user_app_access')
+            .delete()
+            .eq('user_id', userId)
+            .eq('app_id', appId);
+      }
+    } catch (_) {
+      await _loadAccess();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Access change could not be saved.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Manage family access')),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+        ? Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(_error!),
+            ),
+          )
+        : ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              const Text(
+                'Choose a family member, then grant only the services they should see. These changes are applied immediately.',
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedUserId,
+                decoration: const InputDecoration(labelText: 'Family member'),
+                items: _people
+                    .map(
+                      (person) => DropdownMenuItem(
+                        value: person['id'] as String,
+                        child: Text(
+                          '${person['display_name'] ?? person['email']}${person['role'] == 'admin' ? ' (admin)' : ''}',
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) async {
+                  setState(() => _selectedUserId = value);
+                  await _loadAccess();
+                  if (mounted) setState(() {});
+                },
+              ),
+              const SizedBox(height: 18),
+              ..._apps.map((app) {
+                final granted = _access.contains(app['id']);
+                return Card(
+                  child: SwitchListTile(
+                    secondary: CircleAvatar(
+                      child: Text('${app['icon'] ?? '•'}'),
+                    ),
+                    title: Text(app['name'] as String),
+                    subtitle: Text('${app['description'] ?? ''}'),
+                    value: granted,
+                    onChanged: (value) => _toggle(app, value),
+                  ),
+                );
+              }),
+            ],
+          ),
+  );
+}
