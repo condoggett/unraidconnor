@@ -897,6 +897,148 @@ class _DiagnosticItem {
   final String detail;
 }
 
+/// Lets a person reorder the service cards on their own dashboard. The order is
+/// stored locally under their signed-in user ID, never shared with other users.
+class DashboardBuilderScreen extends StatefulWidget {
+  const DashboardBuilderScreen({
+    super.key,
+    required this.apps,
+    required this.initialOrder,
+  });
+  final List<Map<String, dynamic>> apps;
+  final List<String> initialOrder;
+
+  @override
+  State<DashboardBuilderScreen> createState() => _DashboardBuilderScreenState();
+}
+
+/// Plain-language support and privacy explanation for family members. It avoids
+/// exposing technical tokens, URLs or administrative data inside the app.
+class HelpPrivacyScreen extends StatelessWidget {
+  const HelpPrivacyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Help & privacy')),
+    body: ListView(
+      padding: const EdgeInsets.all(18),
+      children: const [
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.apps_outlined),
+            title: Text('Your services'),
+            subtitle: Text(
+              'Only services assigned to your account appear. Ask an admin if something is missing.',
+            ),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.movie_filter_outlined),
+            title: Text('Requesting media'),
+            subtitle: Text(
+              'Open Seerr, request a film or series, then check Now Available when it has been added.',
+            ),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.lock_outline),
+            title: Text('What stays on this phone'),
+            subtitle: Text(
+              'Your app session, personal card layout/style, and a last-known Unraid status reading may be stored locally. No fingerprint data leaves your phone.',
+            ),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.wifi_off_outlined),
+            title: Text('When something is unavailable'),
+            subtitle: Text(
+              'Use Connection diagnostics. It distinguishes your sign-in, the portal and the Unraid status bridge.',
+            ),
+          ),
+        ),
+        Card(
+          child: ListTile(
+            leading: Icon(Icons.system_update_outlined),
+            title: Text('Updates'),
+            subtitle: Text(
+              'The app checks signed releases on launch. You can also choose Check for updates from the menu.',
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _DashboardBuilderScreenState extends State<DashboardBuilderScreen> {
+  late final List<Map<String, dynamic>> _apps;
+
+  @override
+  void initState() {
+    super.initState();
+    _apps = [...widget.apps]
+      ..sort((left, right) {
+        final a = widget.initialOrder.indexOf('${left['id']}');
+        final b = widget.initialOrder.indexOf('${right['id']}');
+        return (a < 0 ? 9999 : a).compareTo(b < 0 ? 9999 : b);
+      });
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Arrange dashboard'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(
+            context,
+            _apps.map((app) => '${app['id']}').toList(),
+          ),
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+    body: Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(18),
+          child: Text(
+            'Hold and drag services into the order you want to see them.',
+          ),
+        ),
+        Expanded(
+          child: ReorderableListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            itemCount: _apps.length,
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) newIndex -= 1;
+                final app = _apps.removeAt(oldIndex);
+                _apps.insert(newIndex, app);
+              });
+            },
+            itemBuilder: (_, index) {
+              final app = _apps[index];
+              return Card(
+                key: ValueKey(app['id']),
+                child: ListTile(
+                  leading: CircleAvatar(child: Text('${app['icon'] ?? '•'}')),
+                  title: Text('${app['name']}'),
+                  subtitle: const Text('Drag to move'),
+                  trailing: const Icon(Icons.drag_handle),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 /// Admin-only editor for the existing user_app_access table. Supabase RLS is
 /// the final authority: a non-admin cannot read or change these records.
 class AdminFamilyAccessScreen extends StatefulWidget {

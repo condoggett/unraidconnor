@@ -246,3 +246,10 @@ V3.6 is tested as a compatibility baseline on Android 15/16 and Android 17.
 Keep the production target on the current stable Flutter/Android SDK until the
 Android 17 SDK and the plugin set are stable, then perform a dedicated target
 SDK upgrade release.
+
+## 27. V3.7 dashboard builder and handover
+
+V3.7 stores dashboard card order in device-local preferences keyed by the
+Supabase user ID. This is intentionally private and requires no new database
+policy. `DashboardBuilderScreen` returns a list of app IDs; `main.dart` saves
+and applies it. The full ownership checklist is in `OWNER_HANDOVER.md`.

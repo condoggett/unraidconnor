@@ -286,6 +286,14 @@ class ReleaseNotesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: const [
         _ReleaseNote(
+          version: '3.7.0',
+          changes: [
+            'New Dashboard Builder: hold and drag your assigned services into the order you prefer.',
+            'New Help & Privacy centre explains service access, media requests, local app data, diagnostics and updates.',
+            'Final family handover release with clearer source guidance and a complete owner handover pack.',
+          ],
+        ),
+        _ReleaseNote(
           version: '3.6.0',
           changes: [
             'New admin Family Access centre: safely choose a family member and grant or remove their assigned services from the app.',

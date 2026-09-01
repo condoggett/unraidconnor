@@ -404,6 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _theme = 'ocean';
   String _layout = 'standard';
   String _cardStyle = 'classic';
+  List<String> _cardOrder = [];
   String _avatar = 'auto';
   bool _appLockEnabled = false;
   Map<String, dynamic>? _maintenance;
@@ -438,6 +439,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final localPreferences = await SharedPreferences.getInstance();
       final cardStyle =
           localPreferences.getString('card_style_${user.id}') ?? 'classic';
+      final orderJson = localPreferences.getString('card_order_${user.id}');
+      final cardOrder = orderJson == null
+          ? <String>[]
+          : (jsonDecode(orderJson) as List).map((item) => '$item').toList();
       await _registerForNotifications(user.id);
       final profile = await _client
           .from('profiles')
@@ -560,6 +565,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _theme = '${dashboardSettings?['theme'] ?? 'ocean'}';
         _layout = '${dashboardSettings?['dashboard_layout'] ?? 'standard'}';
         _cardStyle = cardStyle;
+        _cardOrder = cardOrder;
         _avatar = '${dashboardSettings?['avatar_icon'] ?? 'auto'}';
         _appLockEnabled = dashboardSettings?['app_lock_enabled'] == true;
         _maintenance = maintenance;
@@ -657,6 +663,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'app_id': app['id'],
       });
     } catch (_) {}
+  }
+
+  Future<void> _openDashboardBuilder(List<Map<String, dynamic>> apps) async {
+    final updated = await Navigator.of(context).push<List<String>>(
+      MaterialPageRoute<List<String>>(
+        builder: (_) =>
+            DashboardBuilderScreen(apps: apps, initialOrder: _cardOrder),
+      ),
+    );
+    if (updated == null) return;
+    final userId = _client.auth.currentUser!.id;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('card_order_$userId', jsonEncode(updated));
+    if (mounted) setState(() => _cardOrder = updated);
   }
 
   void _openServices() {
@@ -1044,6 +1064,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final visibleApps = _apps
         .where((app) => !_hidden.contains(app['id']))
         .toList();
+    visibleApps.sort((left, right) {
+      final leftPosition = _cardOrder.indexOf('${left['id']}');
+      final rightPosition = _cardOrder.indexOf('${right['id']}');
+      final leftOrder = leftPosition < 0 ? 9999 : leftPosition;
+      final rightOrder = rightPosition < 0 ? 9999 : rightPosition;
+      return leftOrder != rightOrder
+          ? leftOrder.compareTo(rightOrder)
+          : (left['sort_order'] as int).compareTo(right['sort_order'] as int);
+    });
     final favourites = visibleApps
         .where((app) => _favourites.contains(app['id']))
         .toList();
@@ -1188,6 +1217,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       );
                       break;
+                    case 'dashboard_builder':
+                      _openDashboardBuilder(visibleApps);
+                      break;
+                    case 'help':
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const HelpPrivacyScreen(),
+                        ),
+                      );
+                      break;
                     case 'welcome':
                       _openWelcome();
                       break;
@@ -1290,6 +1329,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: ListTile(
                       leading: Icon(Icons.tune),
                       title: Text('Personalise dashboard'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'dashboard_builder',
+                    child: ListTile(
+                      leading: Icon(Icons.dashboard_customize_outlined),
+                      title: Text('Arrange dashboard'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'help',
+                    child: ListTile(
+                      leading: Icon(Icons.help_outline),
+                      title: Text('Help & privacy'),
                     ),
                   ),
                   PopupMenuItem(
