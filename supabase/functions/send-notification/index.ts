@@ -49,7 +49,25 @@ Deno.serve(async (request) => {
     initializeApp({ credential: cert(JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? '{}')) });
   }
   const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-  const users = user_id ? [user_id] : [...new Set((await supabase.from('user_devices').select('user_id')).data?.map((row) => row.user_id) ?? [])];
+  let users = user_id ? [user_id] : [...new Set((await supabase.from('user_devices').select('user_id')).data?.map((row) => row.user_id) ?? [])];
+  // Seerr knows who made a request.  Route its notifications to that Homelab
+  // account instead of broadcasting them to every family device.  A pending
+  // request is an admin task, so it is deliberately routed only to admins.
+  const service = String(data.service ?? '').toLowerCase();
+  const event = String(data.event ?? data.notification_type ?? '').toLowerCase();
+  const requesterEmail = String(data.requester_email ?? data.requesterEmail ?? '').trim();
+  if (!user_id && category === 'app' && service === 'seerr') {
+    const pending = event.includes('pending');
+    if (pending) {
+      const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+      users = (admins ?? []).map((profile) => profile.id);
+    } else if (requesterEmail) {
+      const { data: requester } = await supabase.from('profiles').select('id').ilike('email', requesterEmail).maybeSingle();
+      users = requester ? [requester.id] : [];
+    } else {
+      return Response.json({ error: 'Seerr notifications require data.requester_email for personal delivery.' }, { status: 400 });
+    }
+  }
   const { data: preferences } = await supabase.from('notification_preferences').select('*').in('user_id', users);
   const preferencesByUser = new Map((preferences ?? []).map((row) => [row.user_id, row as Preference]));
   const permittedUsers = users.filter((id) => {

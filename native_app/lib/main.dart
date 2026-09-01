@@ -15,6 +15,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'notification_screens.dart';
 import 'seerr_screen.dart';
+import 'service_hubs.dart';
 
 const _supabaseUrl = 'https://yrvmanmrzxceqahopfec.supabase.co';
 const _supabaseKey = 'sb_publishable_a1KjGdyaOL4ynlIUJKXhog_cu6xa2oe';
@@ -483,6 +484,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final allApps = visibleApps.where((app) => !favourites.contains(app) && !recent.contains(app)).toList();
     return Scaffold(
         appBar: AppBar(title: const Text('Connor Homelab'), actions: [
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HomeAssistantHubScreen(status: _status))), tooltip: 'Home Assistant hub', icon: const Icon(Icons.home_outlined)),
+          IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => UnraidDashboardScreen(status: _status, admin: _admin))), tooltip: 'Unraid dashboard', icon: const Icon(Icons.dns_outlined)),
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NowAvailableScreen())), tooltip: 'Now available', icon: const Icon(Icons.movie_filter_outlined)),
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationHistoryScreen())), tooltip: 'Notification history', icon: const Icon(Icons.notifications_outlined)),
           IconButton(onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ReleaseNotesScreen())), tooltip: 'What’s new', icon: const Icon(Icons.new_releases_outlined)),
