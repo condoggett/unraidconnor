@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_lock.dart';
+import 'navigation_screens.dart';
 import 'notification_screens.dart';
 import 'release3_screens.dart';
 import 'seerr_screen.dart';
@@ -371,6 +372,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _maintenance;
   List<Map<String, dynamic>> _activity = [];
   Timer? _maintenanceTimer;
+  int _navigationIndex = 0;
 
   @override
   void initState() {
@@ -575,6 +577,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'app_id': app['id'],
       });
     } catch (_) {}
+  }
+
+  void _openServices() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute<void>(
+            builder: (_) => ServiceCatalogueScreen(
+              apps: _apps.where((app) => !_hidden.contains(app['id'])).toList(),
+              onOpen: _openApp,
+            ),
+          ),
+        )
+        .then((_) => setState(() => _navigationIndex = 0));
+  }
+
+  void _openWelcome() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute<void>(builder: (_) => const WelcomeGuideScreen()),
+        )
+        .then((_) => setState(() => _navigationIndex = 0));
   }
 
   Future<void> _personalise() async {
@@ -1048,6 +1071,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             if (saved == true) _load();
                           });
                       break;
+                    case 'welcome':
+                      _openWelcome();
+                      break;
                     case 'update':
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -1125,6 +1151,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: ListTile(
                       leading: Icon(_profileIcon()),
                       title: const Text('My profile'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'welcome',
+                    child: ListTile(
+                      leading: Icon(Icons.tips_and_updates_outlined),
+                      title: Text('Getting started'),
                     ),
                   ),
                   PopupMenuItem(
@@ -1254,6 +1287,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       if (favourites.isNotEmpty) ...[
+                        if (recent.isEmpty) ...[
+                          const SizedBox(height: 18),
+                          Card(
+                            child: ListTile(
+                              leading: const Icon(Icons.waving_hand_outlined),
+                              title: const Text('New to Connor Homelab?'),
+                              subtitle: const Text(
+                                'A quick introduction to your private family services.',
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios),
+                              onTap: _openWelcome,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 24),
                         const _SectionHeading(
                           title: 'Pinned for you',
@@ -1346,6 +1393,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
+          ),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _navigationIndex,
+            onDestinationSelected: (index) {
+              setState(() => _navigationIndex = index);
+              switch (index) {
+                case 0:
+                  break;
+                case 1:
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const NowAvailableScreen(),
+                        ),
+                      )
+                      .then((_) => setState(() => _navigationIndex = 0));
+                  break;
+                case 2:
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const FamilyActivityScreen(),
+                        ),
+                      )
+                      .then((_) => setState(() => _navigationIndex = 0));
+                  break;
+                case 3:
+                  _openServices();
+                  break;
+                case 4:
+                  Navigator.of(context)
+                      .push<bool>(
+                        MaterialPageRoute<bool>(
+                          builder: (_) => const ProfileScreen(),
+                        ),
+                      )
+                      .then((_) {
+                        if (mounted) {
+                          setState(() => _navigationIndex = 0);
+                          _load();
+                        }
+                      });
+                  break;
+              }
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.movie_filter_outlined),
+                selectedIcon: Icon(Icons.movie_filter),
+                label: 'Media',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.bolt_outlined),
+                selectedIcon: Icon(Icons.bolt),
+                label: 'Activity',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.apps_outlined),
+                selectedIcon: Icon(Icons.apps),
+                label: 'Services',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
           ),
         ),
       ),

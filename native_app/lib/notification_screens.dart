@@ -282,6 +282,14 @@ class ReleaseNotesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: const [
         _ReleaseNote(
+          version: '3.3.0',
+          changes: [
+            'New bottom navigation for Home, Media, Activity, Services and Profile.',
+            'Searchable Services catalogue groups your assigned apps into Home, Media, Photos, Homelab and Utilities.',
+            'Getting started guide for family members new to Connor Homelab.',
+          ],
+        ),
+        _ReleaseNote(
           version: '3.2.0',
           changes: [
             'Schedule maintenance notices with start and end times; banners appear and hide automatically in the app.',
