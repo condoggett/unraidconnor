@@ -73,7 +73,7 @@ Deno.serve(async (request) => {
   if (error) return Response.json({ error: error.message }, { status: 500 });
   const results = await Promise.all((devices ?? []).map(async ({ token }) => {
     try {
-      await getMessaging().send({ token, notification: { title, body }, data: Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)])), android: { priority: priority === 'critical' ? 'high' : 'normal' } });
+      await getMessaging().send({ token, notification: { title, body }, data: { ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)])), category }, android: { priority: priority === 'critical' ? 'high' : 'normal' } });
       return true;
     } catch {
       return false;

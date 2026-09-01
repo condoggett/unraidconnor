@@ -21,6 +21,8 @@ const _supabaseKey = 'sb_publishable_a1KjGdyaOL4ynlIUJKXhog_cu6xa2oe';
 const _portalUrl = 'https://conhomelab.uk';
 
 final _localNotifications = FlutterLocalNotificationsPlugin();
+final _navigatorKey = GlobalKey<NavigatorState>();
+Map<String, dynamic>? _pendingNotificationRoute;
 const _notificationChannel = AndroidNotificationChannel(
   'homelab_updates',
   'Homelab updates',
@@ -32,7 +34,16 @@ Future<void> _configureNotifications() async {
   const initializationSettings = InitializationSettings(
     android: AndroidInitializationSettings('@mipmap/ic_launcher'),
   );
-  await _localNotifications.initialize(initializationSettings);
+  await _localNotifications.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (response) {
+      final payload = response.payload;
+      if (payload == null || payload.isEmpty) return;
+      try {
+        _openNotificationRoute(jsonDecode(payload) as Map<String, dynamic>);
+      } catch (_) {}
+    },
+  );
   await _localNotifications
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
@@ -55,8 +66,37 @@ Future<void> _configureNotifications() async {
           icon: '@mipmap/ic_launcher',
         ),
       ),
+      payload: jsonEncode({...message.data, '_title': notification.title ?? '', '_body': notification.body ?? ''}),
     );
   });
+  FirebaseMessaging.onMessageOpenedApp.listen((message) => _openNotificationRoute({...message.data, '_title': message.notification?.title ?? '', '_body': message.notification?.body ?? ''}));
+}
+
+void _openNotificationRoute(Map<String, dynamic> data) {
+  final navigator = _navigatorKey.currentState;
+  if (navigator == null) {
+    _pendingNotificationRoute = data;
+    return;
+  }
+  final service = '${data['service'] ?? ''}'.toLowerCase();
+  final category = '${data['category'] ?? ''}'.toLowerCase();
+  final destination = service == 'seerr' || service == 'overseerr' || service == 'requests'
+      ? const HomelabWebAppScreen(title: 'Seerr', url: 'https://requests.conhomelab.uk')
+      : service == 'home_assistant' || service == 'home-assistant' || category == 'home_assistant'
+          ? const HomelabWebAppScreen(title: 'Home Assistant', url: 'https://ha.conhomelab.uk')
+          : service == 'immich' || service == 'photos'
+              ? const HomelabWebAppScreen(title: 'Immich', url: 'https://photos.conhomelab.uk')
+              : data['version'] != null || category == 'app_update'
+                  ? const ReleaseNotesScreen()
+                  : const NotificationHistoryScreen();
+  navigator.push(MaterialPageRoute<void>(builder: (_) => destination));
+}
+
+void _flushPendingNotificationRoute() {
+  final pending = _pendingNotificationRoute;
+  if (pending == null) return;
+  _pendingNotificationRoute = null;
+  _openNotificationRoute(pending);
 }
 
 Future<void> main() async {
@@ -65,6 +105,9 @@ Future<void> main() async {
   await _configureNotifications();
   await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
   runApp(const HomelabApp());
+  WidgetsBinding.instance.addPostFrameCallback((_) => _flushPendingNotificationRoute());
+  final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) _openNotificationRoute({...initialMessage.data, '_title': initialMessage.notification?.title ?? '', '_body': initialMessage.notification?.body ?? ''});
 }
 
 class HomelabApp extends StatelessWidget {
@@ -72,6 +115,7 @@ class HomelabApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
+        navigatorKey: _navigatorKey,
         title: 'Connor Homelab',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
