@@ -2,7 +2,7 @@
   "version": "2.4.9",
   "versionCode": 15,
   "downloadUrl": "https://github.com/condoggett/unraidconnor/releases/download/v2.4.9/Connor-Homelab-2.4.9.apk",
-  "sha256": "3160d4158b71dcd272c62d0dc0a5a2c614ec97c2171da15422a82578c1d55e11",
+  "sha256": "13b8d1e70ce4624f2e701bac28479460da11b5c7b568c1774085aa1fd099cd38",
   "notes": "Version 2.4.9: Android release prepared by GitHub Actions.",
-  "publishedAt": "2026-09-01T10:41:55Z"
+  "publishedAt": "2026-09-01T10:51:49Z"
 }
