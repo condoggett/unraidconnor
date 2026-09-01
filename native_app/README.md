@@ -44,7 +44,10 @@ The main places to look are:
 | `lib/notification_screens.dart` | Notification history, Now Available and release notes. |
 | `lib/service_hubs.dart` | Home Assistant and Unraid in-app hub screens. |
 | `lib/seerr_screen.dart` | The protected in-app browser used for Homelab services. |
+| `lib/release3_screens.dart` | V3 profiles, maintenance centre, personal activity and Immich highlights. |
+| `lib/app_lock.dart` | Optional Android fingerprint, face, or device-PIN app lock. |
 | `pubspec.yaml` | App version and package dependencies. |
+| `../supabase/release3-and-4.sql` | V3 data migration: personal settings, maintenance notices and user-safe profile updates. |
 
 Run the app on your phone or emulator with the green **Run** button. Before
 publishing, open Android Studio's Terminal and run:
@@ -107,6 +110,60 @@ and matches the published SHA-256 hash before Android shows the install prompt.
 For a website-only change, edit the root `index.html` file, commit it in
 GitHub Desktop and click **Push origin**. Azure Static Web Apps deploys site
 changes automatically. No Android build is needed.
+
+## V3 profile and maintenance database guide
+
+V3 stores a person's theme, dashboard layout, profile icon and app-lock choice
+in Supabase. It also stores maintenance notices. The migration has already been
+run on the live project, so it must **not** be rerun unless the SQL file is
+changed deliberately.
+
+The source of truth is:
+
+```text
+supabase\release3-and-4.sql
+```
+
+If a future migration is needed:
+
+1. Create a new, clearly named SQL file rather than editing a migration that is
+   already live.
+2. Review it carefully: it must enable RLS and grant each member access only to
+   their own settings. Admin-only tables must use `public.is_admin()`.
+3. Run it once in **Supabase → SQL Editor** while signed into project
+   `yrvmanmrzxceqahopfec`.
+4. Keep API keys, service-role keys, passwords and notification secrets out of
+   the SQL file and Git history.
+5. Test with both an ordinary family account and an admin account.
+
+The `update_my_profile` RPC is intentionally limited to the signed-in person's
+display name. Do not replace it with a broad profile update policy; that could
+let a member change their role or another security-related column.
+
+## Current scheduled publishing setup
+
+Only one Windows Task Scheduler task is intentionally kept:
+
+| Task | Purpose | How it runs |
+| --- | --- | --- |
+| `Connor Homelab Publish Release` | Publishes a completed local Android release when you intentionally run it. | Manual / on-demand only. |
+
+The old repeating preparation and finaliser tasks were removed because GitHub
+Actions now reliably builds, signs, publishes and deploys the update manifest
+in one workflow. Do not recreate polling tasks; they can collide with a build
+or leave a Git lock file behind.
+
+## V3 feature map
+
+- **My profile** — name, icon, personal theme, dashboard layout, and app lock.
+- **Maintenance centre** — active family notices; admins can create a banner.
+- **Latest for you** — personal activity cards on the home screen.
+- **Now Available** — your available requested media, based on private
+  notification history.
+- **App lock** — uses Android's own biometric or device-PIN prompt; biometric
+  data never leaves the phone.
+
+Service webhooks and connector setup are intentionally deferred to **V3.5**.
 
 ### If a GitHub Actions release fails
 
