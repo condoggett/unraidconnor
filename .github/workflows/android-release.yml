@@ -93,10 +93,18 @@ jobs:
           gh release view "${{ steps.release.outputs.tag }}" >/dev/null 2>&1 || gh release create "${{ steps.release.outputs.tag }}" --title "Connor Homelab ${{ steps.release.outputs.tag }}" --notes "Android release built by GitHub Actions."
           gh release upload "${{ steps.release.outputs.tag }}" "${{ steps.release.outputs.apk }}" --clobber
 
-      - name: Deploy the update manifest to Connor Homelab
+      - name: Deploy and verify the update manifest
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run "Azure Static Web Apps CI/CD" --ref main
+        run: |
+          gh workflow run "Azure Static Web Apps CI/CD" --ref main
+          for attempt in {1..20}; do
+            DEPLOY_RUN=$(gh run list --workflow "Azure Static Web Apps CI/CD" --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId')
+            test -n "$DEPLOY_RUN" && break
+            sleep 3
+          done
+          test -n "$DEPLOY_RUN"
+          gh run watch "$DEPLOY_RUN" --exit-status
 
       - name: Notify family about the app update
         env:
