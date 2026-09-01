@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
@@ -369,11 +370,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _appLockEnabled = false;
   Map<String, dynamic>? _maintenance;
   List<Map<String, dynamic>> _activity = [];
+  Timer? _maintenanceTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _maintenanceTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _refreshMaintenance(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _maintenanceTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -426,18 +438,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             .select('theme, dashboard_layout, avatar_icon, app_lock_enabled')
             .eq('user_id', user.id)
             .maybeSingle();
-        maintenance = await _client
+        final notices = await _client
             .from('maintenance_notices')
             .select('active, title, message, starts_at, ends_at')
             .eq('active', true)
             .order('created_at', ascending: false)
-            .limit(1)
-            .maybeSingle();
+            .limit(20);
+        for (final notice in (notices as List).cast<Map<String, dynamic>>()) {
+          if (_maintenanceIsLive(notice)) {
+            maintenance = notice;
+            break;
+          }
+        }
       } catch (_) {
         // The optional Release 3 migration has not been applied yet.
-      }
-      if (maintenance != null && !_maintenanceIsLive(maintenance)) {
-        maintenance = null;
       }
       List<String> recentAppIds = [];
       try {
@@ -734,6 +748,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'app' => Icons.apps_outlined,
     _ => Icons.bolt_outlined,
   };
+
+  Future<void> _refreshMaintenance() async {
+    try {
+      final rows = await _client
+          .from('maintenance_notices')
+          .select('active, title, message, starts_at, ends_at')
+          .eq('active', true)
+          .order('created_at', ascending: false)
+          .limit(20);
+      Map<String, dynamic>? live;
+      for (final notice in (rows as List).cast<Map<String, dynamic>>()) {
+        if (_maintenanceIsLive(notice)) {
+          live = notice;
+          break;
+        }
+      }
+      if (mounted) setState(() => _maintenance = live);
+    } catch (_) {}
+  }
 
   bool _maintenanceIsLive(Map<String, dynamic> notice) {
     if (notice['active'] != true) return false;
