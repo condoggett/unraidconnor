@@ -282,6 +282,14 @@ class ReleaseNotesScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       children: const [
         _ReleaseNote(
+          version: '3.1.0',
+          changes: [
+            'Home Assistant is now a clearer in-app home hub with secure-session status and quick access.',
+            'Unraid hub now shows connection state, CPU, memory, uptime, containers and a Docker shortcut.',
+            'In-app service pages now explain connection problems and offer a retry action.',
+          ],
+        ),
+        _ReleaseNote(
           version: '3.0.0',
           changes: [
             'Your profile: personal name, icon, theme, dashboard layout and phone-lock choice.',
